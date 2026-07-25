@@ -7569,5 +7569,566 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 
 </script>
+
+<style id="pt-v36-ui-realtime-calls-style">
+.app-viewport.sidebar-collapsed .sidebar{width:92px !important;min-width:92px !important}.app-viewport.sidebar-collapsed .sidebar .search-input-wrapper,.app-viewport.sidebar-collapsed .sidebar .sidebar-mini-actions,.app-viewport.sidebar-collapsed .sidebar .chat-details,.app-viewport.sidebar-collapsed .sidebar .offline-solo-note,.app-viewport.sidebar-collapsed .sidebar .saved-subtabs,.app-viewport.sidebar-collapsed .sidebar .personal-section-strip,.app-viewport.sidebar-collapsed .sidebar .story-tip-badge{display:none !important}.app-viewport.sidebar-collapsed .sidebar .sidebar-header{justify-content:center;padding:12px 8px}.app-viewport.sidebar-collapsed .sidebar .menu-burger-btn{margin:0 auto}.app-viewport.sidebar-collapsed .sidebar .chat-item-card{justify-content:center;padding:10px 0}.app-viewport.sidebar-collapsed .sidebar .fab-create-btn{left:50% !important;right:auto !important;transform:translateX(-50%);bottom:16px !important}.app-viewport.sidebar-collapsed .sidebar .chat-item-card .avatar{width:44px;height:44px}.app-viewport.sidebar-collapsed .sidebar .status-indicator{right:4px}.pt-head{display:none !important}.settings-tabs-nav{display:none !important}#settingsModal .modal-content-card{max-width:760px !important}.simple-settings-wrap{display:flex;flex-direction:column;gap:18px}.simple-settings-section{padding:18px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}.simple-settings-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:14px}.simple-settings-desc{font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:12px}.simple-settings-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.simple-settings-wallpaper-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.simple-wallpaper-card{border-radius:16px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:var(--transition-fast);background:rgba(255,255,255,.03)}.simple-wallpaper-card:hover{transform:translateY(-2px)}.simple-wallpaper-card.active{border-color:var(--tg-accent);box-shadow:0 12px 28px rgba(82,136,193,.15)}.simple-wallpaper-preview{height:84px}.simple-wallpaper-label{padding:10px;text-align:center;font-size:11px;font-weight:700;color:#fff}.simple-upload-btn{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:700}.simple-upload-btn:hover{background:rgba(255,255,255,.09)}.typing-pill{display:inline-flex;align-items:center;gap:6px;color:#4ade80;font-size:11.5px;font-weight:700}.typing-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:typingPulseV36 1s infinite alternate}.typing-dot:nth-child(2){animation-delay:.18s}.typing-dot:nth-child(3){animation-delay:.36s}@keyframes typingPulseV36{from{opacity:.35;transform:translateY(0)}to{opacity:1;transform:translateY(-2px)}}.wallpaper-offer-card{display:flex;flex-direction:column;gap:10px;min-width:240px}.wallpaper-offer-preview{height:94px;border-radius:14px;border:1px solid rgba(255,255,255,.08)}.wallpaper-offer-actions{display:flex;gap:8px;flex-wrap:wrap}.wallpaper-offer-actions button{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700}.wallpaper-offer-actions .accept{background:rgba(82,136,193,.16);border-color:rgba(82,136,193,.22)}.header-icon-btn.calling{background:rgba(236,72,153,.12);color:#fff}.sticker-item-card img{display:block}.sticker-item-card{background:rgba(255,255,255,.03)}@media (max-width:768px){.simple-settings-wallpaper-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.app-viewport.sidebar-collapsed .sidebar{width:76px !important;min-width:76px !important}}
+</style>
+
+<script id="pt-v36-ui-realtime-calls-script">
+(() => {
+  if (window.__playTalkV36Loaded) return;
+  window.__playTalkV36Loaded = true;
+
+  const SUPABASE_URL = 'https://kxfrlggnjkrquczjaiqb.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_okGGbpyPata_z311qSkTnQ_NhnFwZ5G';
+  const WALLPAPER_PREFIX = '__wallpaper_offer__:';
+
+  const V36 = {
+    client: null,
+    typingChannel: null,
+    rtcChannel: null,
+    typingTimeout: null,
+    incomingTypingTimers: {},
+    typingMap: {},
+    peerConnection: null,
+    localStream: null,
+    remoteUserId: null,
+    currentCallTypeVideo: false,
+    simpleWallpapers: [
+      { id: 'aurora', label: 'Aurora', value: 'linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%)' },
+      { id: 'sunset', label: 'Sunset', value: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)' },
+      { id: 'mint', label: 'Mint', value: 'linear-gradient(135deg, #0f766e 0%, #38bdf8 100%)' }
+    ],
+    fixedStickers: [],
+
+    getClient() {
+      if (this.client) return this.client;
+      if (!window.supabase || !window.supabase.createClient) return null;
+      this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return this.client;
+    },
+
+    safeText(value) {
+      return AppEngine.escapeHTML(String(value == null ? '' : value));
+    },
+
+    isOnline(lastSeen) {
+      if (!lastSeen) return false;
+      return Date.now() - new Date(lastSeen).getTime() < 20000;
+    },
+
+    formatLastSeen(lastSeen) {
+      if (!lastSeen) return 'offline';
+      const diff = Date.now() - new Date(lastSeen).getTime();
+      if (diff < 20000) return 'в сети';
+      if (diff < 60000) return 'был(а) только что';
+      if (diff < 3600000) return `был(а) ${Math.floor(diff / 60000)} мин назад`;
+      return 'offline';
+    },
+
+    chatKey(userId) {
+      return [AppState.currentUser.id, userId].sort().join('__');
+    },
+
+    getActiveMessages() {
+      if (!AppState.activeChat || !AppState.currentUser) return [];
+      return AppState.messages[this.chatKey(AppState.activeChat.id)] || [];
+    },
+
+    generateSticker(bg1, bg2, emoji) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${bg1}"/><stop offset="1" stop-color="${bg2}"/></linearGradient></defs><rect width="180" height="180" rx="38" fill="url(#g)"/><circle cx="40" cy="42" r="16" fill="rgba(255,255,255,.13)"/><circle cx="142" cy="138" r="18" fill="rgba(255,255,255,.11)"/><text x="90" y="112" text-anchor="middle" font-size="74">${emoji}</text></svg>`;
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    },
+
+    initStickers() {
+      if (this.fixedStickers.length) return;
+      this.fixedStickers = [
+        this.generateSticker('#ec4899','#fb7185','❤️'),
+        this.generateSticker('#8b5cf6','#ec4899','🎉'),
+        this.generateSticker('#06b6d4','#2563eb','🚀'),
+        this.generateSticker('#10b981','#14b8a6','🌿'),
+        this.generateSticker('#f59e0b','#facc15','👑'),
+        this.generateSticker('#2563eb','#7c3aed','🎮'),
+        this.generateSticker('#ef4444','#f97316','🔥'),
+        this.generateSticker('#22c55e','#06b6d4','😂'),
+        this.generateSticker('#0ea5e9','#6366f1','😎'),
+        this.generateSticker('#9333ea','#22d3ee','💎'),
+        this.generateSticker('#475569','#1d4ed8','🌙'),
+        this.generateSticker('#f97316','#fb7185','🌹')
+      ];
+      StickerAssets.stickers = this.fixedStickers;
+    },
+
+    patchStickerDrawer() {
+      this.initStickers();
+      StickerDrawerEngine.renderContent = () => {
+        const body = document.getElementById('stickerDrawerScrollBody');
+        body.innerHTML = '';
+        if (StickerDrawerEngine.currentTab === 'emoji') {
+          const grid = document.createElement('div');
+          grid.className = 'emoji-grid-full';
+          EMOJI_LIST.forEach(emoji => {
+            const cell = document.createElement('div');
+            cell.className = 'emoji-cell-item';
+            cell.textContent = emoji;
+            cell.onclick = () => {
+              document.getElementById('msgTextInput').value += emoji;
+              document.getElementById('msgTextInput').focus();
+            };
+            grid.appendChild(cell);
+          });
+          body.appendChild(grid);
+          return;
+        }
+        if (StickerDrawerEngine.currentTab === 'stickers') {
+          const grid = document.createElement('div');
+          grid.className = 'sticker-grid-layout';
+          this.fixedStickers.forEach(url => {
+            const card = document.createElement('div');
+            card.className = 'sticker-item-card';
+            card.innerHTML = `<img src="${url}" alt="sticker">`;
+            card.onclick = () => MessagingEngine.sendStickerMessage(url);
+            grid.appendChild(card);
+          });
+          body.appendChild(grid);
+          return;
+        }
+        body.innerHTML = '<div class="sticker-empty-state"><div class="icon">🎬</div><div>GIF позже</div></div>';
+      };
+    },
+
+    toggleSidebar() {
+      document.getElementById('appViewport')?.classList.toggle('sidebar-collapsed');
+    },
+
+    patchBurger() {
+      const burger = document.querySelector('.menu-burger-btn');
+      if (!burger) return;
+      burger.onclick = event => {
+        event.preventDefault();
+        this.toggleSidebar();
+      };
+    },
+
+    ensureRealtimeChannels() {
+      const client = this.getClient();
+      if (!client || !AppState.currentUser) return;
+      if (!this.typingChannel) {
+        this.typingChannel = client.channel('typing-v36');
+        this.typingChannel
+          .on('broadcast', { event: 'typing' }, event => this.handleTypingEvent(event.payload))
+          .subscribe();
+      }
+      if (!this.rtcChannel) {
+        this.rtcChannel = client.channel('rtc-v36');
+        this.rtcChannel
+          .on('broadcast', { event: 'rtc' }, event => this.handleRtcEvent(event.payload))
+          .subscribe();
+      }
+    },
+
+    sendTyping(active) {
+      if (!AppState.currentUser || !AppState.activeChat || !this.typingChannel) return;
+      this.typingChannel.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { from: AppState.currentUser.id, to: AppState.activeChat.id, active }
+      });
+    },
+
+    handleTypingEvent(payload) {
+      if (!AppState.currentUser || !payload || payload.to !== AppState.currentUser.id) return;
+      if (payload.active) {
+        this.typingMap[payload.from] = true;
+        clearTimeout(this.incomingTypingTimers[payload.from]);
+        this.incomingTypingTimers[payload.from] = setTimeout(() => {
+          delete this.typingMap[payload.from];
+          this.refreshTypingUi();
+        }, 1800);
+      } else {
+        delete this.typingMap[payload.from];
+      }
+      this.refreshTypingUi();
+    },
+
+    refreshTypingUi() {
+      if (!AppState.activeChat) return;
+      const subtitle = document.getElementById('activeChatSubtitle');
+      if (!subtitle) return;
+      if (this.typingMap[AppState.activeChat.id]) {
+        subtitle.innerHTML = `<span class="typing-pill"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> печатает...</span>`;
+        subtitle.className = 'subtitle';
+      } else {
+        subtitle.textContent = this.formatLastSeen(AppState.activeChat.last_seen);
+        subtitle.className = 'subtitle' + (this.isOnline(AppState.activeChat.last_seen) ? '' : ' offline');
+      }
+    },
+
+    bindTypingInput() {
+      const input = document.getElementById('msgTextInput');
+      if (!input || input.dataset.v36Typing === '1') return;
+      input.dataset.v36Typing = '1';
+      input.addEventListener('input', () => {
+        this.sendTyping(!!input.value.trim());
+        clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => this.sendTyping(false), 1200);
+      });
+    },
+
+    async insertMessageBody(body) {
+      const client = this.getClient();
+      if (!client || !AppState.currentUser || !AppState.activeChat) return;
+      const { data, error } = await client.from('messages').insert({
+        sender_id: AppState.currentUser.id,
+        recipient_id: AppState.activeChat.id,
+        body
+      }).select().single();
+      if (error) {
+        AppEngine.showToast(error.message);
+        return null;
+      }
+      return data;
+    },
+
+    parseSpecialMessage(text) {
+      if (typeof text !== 'string') return null;
+      if (text.startsWith(WALLPAPER_PREFIX)) {
+        try {
+          const payload = JSON.parse(text.slice(WALLPAPER_PREFIX.length));
+          return { type: 'wallpaper_offer', payload };
+        } catch (error) {
+          return null;
+        }
+      }
+      return null;
+    },
+
+    applyWallpaperLocally(value) {
+      if (!AppState.activeChat) return;
+      const key = WallpaperEngine.getChatKey(AppState.activeChat.id);
+      AppState.settings.chatWallpapers[key] = value;
+      WallpaperEngine.applyToChatView();
+    },
+
+    acceptWallpaper(messageId) {
+      const msg = this.getActiveMessages().find(item => item.id === messageId);
+      if (!msg) return;
+      const parsed = this.parseSpecialMessage(msg.text);
+      if (!parsed) return;
+      this.applyWallpaperLocally(parsed.payload.value);
+      AppEngine.showToast('🎨 Обои применены');
+    },
+
+    declineWallpaper() {
+      AppEngine.showToast('Отклонено');
+    },
+
+    patchMessagesRender() {
+      MessagingEngine.renderMessages = () => {
+        if (!AppState.activeChat) return;
+        const viewport = document.getElementById('messagesViewport');
+        viewport.innerHTML = '';
+        const messages = this.getActiveMessages();
+        if (!messages.length) {
+          viewport.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:13px;">${t('no_messages')}</div>`;
+          return;
+        }
+        let lastDate = null;
+        messages.forEach(msg => {
+          const msgDate = new Date(msg.time).toDateString();
+          if (msgDate !== lastDate) {
+            const sep = document.createElement('div');
+            sep.className = 'msg-date-separator';
+            sep.textContent = MessagingEngine.formatDate(msg.time);
+            viewport.appendChild(sep);
+            lastDate = msgDate;
+          }
+          const isOut = msg.senderId === AppState.currentUser.id;
+          const row = document.createElement('div');
+          row.className = `msg-row-container ${isOut ? 'outgoing' : 'incoming'}`;
+          const parsed = this.parseSpecialMessage(msg.text);
+          if (parsed && parsed.type === 'wallpaper_offer') {
+            const title = parsed.payload.name || 'Обои';
+            const preview = parsed.payload.value;
+            row.innerHTML = `
+              <div class="msg-bubble-card">
+                <div class="wallpaper-offer-card">
+                  <div style="font-size:13px; font-weight:800; color:#fff;">🎨 Предложение поставить обои</div>
+                  <div class="wallpaper-offer-preview" style="background:${preview}"></div>
+                  <div style="font-size:12px; color:rgba(255,255,255,.8);">${this.safeText(title)}</div>
+                  ${isOut ? '<div style="font-size:11px; color:rgba(255,255,255,.65);">Отправлено собеседнику</div>' : `<div class="wallpaper-offer-actions"><button class="accept" onclick="window.V36.acceptWallpaper('${msg.id}')">Поставить</button><button onclick="window.V36.declineWallpaper()">Нет</button></div>`}
+                </div>
+                <div class="msg-meta-details"><div>${AppEngine.formatTime(msg.time)}</div>${isOut ? '<div class="msg-check-mark">✓✓</div>' : ''}</div>
+              </div>
+            `;
+          } else {
+            row.innerHTML = `
+              <div class="msg-bubble-card">
+                <div>${AppEngine.escapeHTML(msg.text)}</div>
+                <div class="msg-meta-details">
+                  <div>${AppEngine.formatTime(msg.time)}</div>
+                  ${isOut ? '<div class="msg-check-mark">✓✓</div>' : ''}
+                </div>
+              </div>
+            `;
+          }
+          viewport.appendChild(row);
+        });
+        viewport.scrollTop = viewport.scrollHeight;
+      };
+    },
+
+    patchSendMessage() {
+      MessagingEngine.sendTextMessage = async () => {
+        const input = document.getElementById('msgTextInput');
+        const text = input.value.trim();
+        if (!text || !AppState.activeChat || !AppState.currentUser) return;
+        const row = await this.insertMessageBody(text);
+        if (!row) return;
+        const key = this.chatKey(AppState.activeChat.id);
+        AppState.messages[key] = AppState.messages[key] || [];
+        const msg = this.dbMessageToApp(row);
+        if (!AppState.messages[key].find(item => item.id === msg.id)) AppState.messages[key].push(msg);
+        input.value = '';
+        this.sendTyping(false);
+        MessagingEngine.renderMessages();
+        AppEngine.renderChatList();
+      };
+    },
+
+    patchSettingsSimple() {
+      SettingsEngine.renderContent = () => {
+        const body = document.getElementById('settingsContentBody');
+        if (!body || !AppState.currentUser) return;
+        const currentTheme = AppState.settings.theme || 'default';
+        const currentChatKey = AppState.activeChat ? WallpaperEngine.getChatKey(AppState.activeChat.id) : null;
+        const currentWallpaper = currentChatKey ? AppState.settings.chatWallpapers[currentChatKey] : null;
+        body.innerHTML = `
+          <div class="simple-settings-wrap">
+            <div class="simple-settings-section">
+              <div class="simple-settings-title">Профиль</div>
+              <div class="field-group"><label>Имя</label><input class="field-input" id="setName" value="${this.safeText(AppState.currentUser.name)}"></div>
+              <div class="field-group"><label>Тег</label><input class="field-input" id="setTag" value="${this.safeText(AppState.currentUser.tag)}"></div>
+              <div class="field-group"><label>Email</label><input class="field-input" id="setEmail" value="${this.safeText(AppState.currentUser.email || '')}"></div>
+              <div class="field-group"><label>О себе</label><textarea class="field-input textarea-input" id="setBio">${this.safeText(AppState.currentUser.bio || '')}</textarea></div>
+              <div class="simple-settings-actions">
+                <button class="pt-btn" onclick="SettingsEngine.saveAccount()">Сохранить</button>
+                <button class="pt-btn4" id="simpleLogoutBtnV36">Выйти</button>
+              </div>
+            </div>
+            <div class="simple-settings-section">
+              <div class="simple-settings-title">Уведомления</div>
+              <div class="settings-item" onclick="SettingsEngine.toggleSetting('notifSound', this.querySelector('.toggle-switch'))"><div class="icon">🔔</div><div class="content"><div class="title">Звук уведомлений</div></div><div class="toggle-switch ${AppState.settings.notifSound !== false ? 'active' : ''}"></div></div>
+              <div class="settings-item" onclick="SettingsEngine.toggleSetting('notifPreview', this.querySelector('.toggle-switch'))"><div class="icon">👀</div><div class="content"><div class="title">Предпросмотр</div></div><div class="toggle-switch ${AppState.settings.notifPreview !== false ? 'active' : ''}"></div></div>
+            </div>
+            <div class="simple-settings-section">
+              <div class="simple-settings-title">Оформление</div>
+              <div class="theme-preview-grid">
+                <div class="theme-preview-card ${currentTheme === 'default' ? 'selected' : ''}" style="background:linear-gradient(135deg,#0e1621,#17212b);" onclick="SettingsEngine.setTheme('default')"><span>🌌</span><span>Синяя</span></div>
+                <div class="theme-preview-card ${currentTheme === 'theme-purple' ? 'selected' : ''}" style="background:linear-gradient(135deg,#0a0512,#160d29);" onclick="SettingsEngine.setTheme('theme-purple')"><span>🔮</span><span>Фиолет</span></div>
+                <div class="theme-preview-card ${currentTheme === 'theme-light' ? 'selected' : ''}" style="background:linear-gradient(135deg,#f0f2f5,#e4e6eb); color:#000;" onclick="SettingsEngine.setTheme('theme-light')"><span>☀️</span><span>Светлая</span></div>
+              </div>
+            </div>
+            <div class="simple-settings-section">
+              <div class="simple-settings-title">Обои чата</div>
+              <div class="simple-settings-wallpaper-grid">
+                ${this.simpleWallpapers.map(w => `<div class="simple-wallpaper-card ${currentWallpaper === w.value ? 'active' : ''}" onclick="window.V36.selectWallpaper('${encodeURIComponent(w.value)}','${w.label}')"><div class="simple-wallpaper-preview" style="background:${w.value}"></div><div class="simple-wallpaper-label">${w.label}</div></div>`).join('')}
+                <button class="simple-upload-btn" onclick="window.V36.uploadCustomWallpaper()">Свои обои</button>
+              </div>
+            </div>
+          </div>
+        `;
+        const logoutBtn = document.getElementById('simpleLogoutBtnV36');
+        if (logoutBtn) {
+          logoutBtn.onclick = async () => {
+            if (!confirm('Выйти из аккаунта?')) return;
+            const client = this.getClient();
+            await client.auth.signOut();
+          };
+        }
+      };
+      AppEngine.openSettingsModal = () => {
+        AppEngine.updateSettingsUserInfo();
+        SettingsEngine.renderContent();
+        document.getElementById('settingsModal').classList.remove('hidden');
+      };
+    },
+
+    async selectWallpaper(encodedValue, label) {
+      const value = decodeURIComponent(encodedValue);
+      if (!AppState.activeChat) {
+        AppEngine.showToast('Открой чат');
+        return;
+      }
+      this.applyWallpaperLocally(value);
+      AppEngine.showToast('🎨 Обои поставлены');
+      if (confirm('Предложить собеседнику поставить эти обои?')) {
+        await this.insertMessageBody(WALLPAPER_PREFIX + JSON.stringify({ name: label, value }));
+        await this.syncMessagesOnly();
+      }
+    },
+
+    uploadCustomWallpaper() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async ev => {
+          const value = `url(${ev.target.result})`;
+          this.applyWallpaperLocally(value);
+          AppEngine.showToast('🎨 Свои обои применены');
+          if (AppState.activeChat && confirm('Предложить собеседнику поставить эти обои?')) {
+            await this.insertMessageBody(WALLPAPER_PREFIX + JSON.stringify({ name: 'Свои обои', value }));
+            await this.syncMessagesOnly();
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    },
+
+    async syncMessagesOnly() {
+      const client = this.getClient();
+      if (!client || !AppState.currentUser) return;
+      const { data, error } = await client
+        .from('messages')
+        .select('*')
+        .or(`sender_id.eq.${AppState.currentUser.id},recipient_id.eq.${AppState.currentUser.id}`)
+        .order('created_at');
+      if (error) return;
+      AppState.messages = {};
+      (data || []).forEach(row => {
+        const key = [row.sender_id, row.recipient_id].sort().join('__');
+        AppState.messages[key] = AppState.messages[key] || [];
+        const msg = this.dbMessageToApp(row);
+        if (!AppState.messages[key].find(item => item.id === msg.id)) AppState.messages[key].push(msg);
+      });
+      MessagingEngine.renderMessages();
+      AppEngine.renderChatList();
+    },
+
+    patchCalls() {
+      const rtc = WebRTCEngine;
+      rtc.rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+      rtc.createPeer = (remoteId) => {
+        rtc.peerConnection = new RTCPeerConnection(rtc.rtcConfig);
+        rtc.remoteUserId = remoteId;
+        rtc.peerConnection.ontrack = e => {
+          document.getElementById('remoteVideo').srcObject = e.streams[0];
+        };
+        rtc.peerConnection.onicecandidate = e => {
+          if (e.candidate && this.rtcChannel) {
+            this.rtcChannel.send({ type: 'broadcast', event: 'rtc', payload: { type: 'ice', to: remoteId, from: AppState.currentUser.id, candidate: e.candidate } });
+          }
+        };
+        if (rtc.localStream) rtc.localStream.getTracks().forEach(track => rtc.peerConnection.addTrack(track, rtc.localStream));
+      };
+      rtc.startCall = async (isVideo) => {
+        if (!AppState.activeChat) return;
+        this.ensureRealtimeChannels();
+        rtc.currentCallTypeVideo = isVideo;
+        document.getElementById('webrtcCallOverlay').classList.remove('hidden');
+        document.getElementById('callTitleText').textContent = isVideo ? 'Видеозвонок...' : 'Звонок...';
+        try {
+          rtc.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: isVideo });
+          document.getElementById('localVideo').srcObject = rtc.localStream;
+          rtc.createPeer(AppState.activeChat.id);
+          const offer = await rtc.peerConnection.createOffer();
+          await rtc.peerConnection.setLocalDescription(offer);
+          this.rtcChannel.send({ type: 'broadcast', event: 'rtc', payload: { type: 'offer', to: AppState.activeChat.id, from: AppState.currentUser.id, offer, video: isVideo } });
+        } catch (error) {
+          console.error(error);
+          AppEngine.showToast('Не удалось начать звонок');
+        }
+      };
+      rtc.endCall = (silent = false) => {
+        if (!silent && this.rtcChannel && rtc.remoteUserId && AppState.currentUser) {
+          this.rtcChannel.send({ type: 'broadcast', event: 'rtc', payload: { type: 'end', to: rtc.remoteUserId, from: AppState.currentUser.id } });
+        }
+        if (rtc.peerConnection) {
+          rtc.peerConnection.close();
+          rtc.peerConnection = null;
+        }
+        if (rtc.localStream) {
+          rtc.localStream.getTracks().forEach(track => track.stop());
+          rtc.localStream = null;
+        }
+        document.getElementById('remoteVideo').srcObject = null;
+        document.getElementById('localVideo').srcObject = null;
+        document.getElementById('webrtcCallOverlay').classList.add('hidden');
+        rtc.remoteUserId = null;
+      };
+    },
+
+    async handleRtcEvent(payload) {
+      if (!payload || !AppState.currentUser || payload.to !== AppState.currentUser.id) return;
+      const rtc = WebRTCEngine;
+      if (payload.type === 'offer') {
+        const caller = (AppState.users || []).find(user => user.id === payload.from);
+        document.getElementById('webrtcCallOverlay').classList.remove('hidden');
+        document.getElementById('callTitleText').textContent = (caller ? caller.name : 'Пользователь') + (payload.video ? ' звонит по видео' : ' звонит');
+        rtc.currentCallTypeVideo = !!payload.video;
+        rtc.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!payload.video });
+        document.getElementById('localVideo').srcObject = rtc.localStream;
+        rtc.createPeer(payload.from);
+        await rtc.peerConnection.setRemoteDescription(new RTCSessionDescription(payload.offer));
+        const answer = await rtc.peerConnection.createAnswer();
+        await rtc.peerConnection.setLocalDescription(answer);
+        this.rtcChannel.send({ type: 'broadcast', event: 'rtc', payload: { type: 'answer', to: payload.from, from: AppState.currentUser.id, answer } });
+      }
+      if (payload.type === 'answer' && rtc.peerConnection) {
+        await rtc.peerConnection.setRemoteDescription(new RTCSessionDescription(payload.answer));
+      }
+      if (payload.type === 'ice' && rtc.peerConnection) {
+        try { await rtc.peerConnection.addIceCandidate(payload.candidate); } catch (error) {}
+      }
+      if (payload.type === 'end') {
+        rtc.endCall(true);
+      }
+    },
+
+    patchHeaderInfo() {
+      const header = document.querySelector('.chat-header-user-info');
+      if (header) header.onclick = () => {
+        if (AppState.activeChat?.id) ProfileViewerEngine.openUserProfile(AppState.activeChat.id);
+      };
+      const infoBtn = document.querySelectorAll('.chat-header-actions .header-icon-btn')[2];
+      if (infoBtn) infoBtn.onclick = () => {
+        if (AppState.activeChat?.id) ProfileViewerEngine.openUserProfile(AppState.activeChat.id);
+      };
+    },
+
+    init() {
+      this.patchStickerDrawer();
+      this.patchBurger();
+      this.patchMessagesRender();
+      this.patchSendMessage();
+      this.patchSettingsSimple();
+      this.patchCalls();
+      this.patchHeaderInfo();
+      this.patchProfileViewer();
+      this.bindTypingInput();
+      this.ensureRealtimeChannels();
+      this.refreshTypingUi();
+    }
+  };
+
+  window.V36 = V36;
+  document.addEventListener('DOMContentLoaded', () => {
+    const boot = () => {
+      if (!AppState.currentUser) {
+        setTimeout(boot, 500);
+        return;
+      }
+      V36.init();
+    };
+    setTimeout(boot, 1400);
+  });
+})();
+
+</script>
 </body>
 </html>
