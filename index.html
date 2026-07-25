@@ -7178,5 +7178,79 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 
 </script>
+
+<script id="pt-v34-profile-modal-fix-script">
+(() => {
+  if (window.__playTalkV34Loaded) return;
+  window.__playTalkV34Loaded = true;
+
+  function onlineFormatLastSeen(value) {
+    if (!value) return 'offline';
+    const diff = Date.now() - new Date(value).getTime();
+    if (diff < 20000) return 'в сети';
+    if (diff < 60000) return 'был(а) только что';
+    if (diff < 3600000) return `был(а) ${Math.floor(diff / 60000)} мин назад`;
+    return 'offline';
+  }
+
+  function patchOnlineProfileModal() {
+    const originalProfileOpen = ProfileViewerEngine.openUserProfile.bind(ProfileViewerEngine);
+    ProfileViewerEngine.openUserProfile = function(userId) {
+      const user = (AppState.users || []).find(item => item.id === userId);
+      if (!user) return originalProfileOpen(userId);
+      this.currentViewingUser = user;
+
+      const avatar = document.getElementById('profileBigAvatar');
+      if (user.avatar) {
+        avatar.style.background = `url(${user.avatar}) center/cover`;
+        avatar.textContent = '';
+      } else {
+        avatar.style.background = user.color || 'linear-gradient(135deg, #649bd3, #2b5278)';
+        avatar.textContent = (user.name || '?')[0].toUpperCase();
+      }
+
+      document.getElementById('profileName').textContent = user.name || user.username || 'User';
+      const statusEl = document.getElementById('profileStatus');
+      statusEl.textContent = onlineFormatLastSeen(user.last_seen);
+      statusEl.className = 'tg-profile-status' + ((statusEl.textContent === 'в сети') ? ' online' : '');
+      document.getElementById('profilePhone').textContent = user.phone || '—';
+      document.getElementById('profileBio').textContent = user.bio || '—';
+      document.getElementById('profileTag').textContent = user.tag || ('@' + (user.username || 'user'));
+      document.getElementById('userProfileModal').classList.remove('hidden');
+    };
+
+    const headerInfo = document.querySelector('.chat-header-user-info');
+    if (headerInfo && headerInfo.dataset.v34Bound !== '1') {
+      headerInfo.dataset.v34Bound = '1';
+      headerInfo.onclick = () => {
+        if (AppState.activeChat && AppState.activeChat.id) {
+          ProfileViewerEngine.openUserProfile(AppState.activeChat.id);
+        }
+      };
+    }
+
+    document.querySelectorAll('.chat-header-actions .header-icon-btn').forEach((button, index) => {
+      if (index === 2) {
+        button.onclick = () => {
+          if (AppState.activeChat && AppState.activeChat.id) {
+            ProfileViewerEngine.openUserProfile(AppState.activeChat.id);
+          }
+        };
+      }
+    });
+  }
+
+  const oldOpenChatV34 = AppEngine.openChat.bind(AppEngine);
+  AppEngine.openChat = function(user) {
+    oldOpenChatV34(user);
+    setTimeout(patchOnlineProfileModal, 30);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(patchOnlineProfileModal, 120);
+  });
+})();
+
+</script>
 </body>
 </html>
