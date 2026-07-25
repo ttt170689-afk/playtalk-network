@@ -7105,5 +7105,78 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 
 </script>
+
+<script id="pt-v33-logout-fix-script">
+(() => {
+  if (window.__playTalkV33Loaded) return;
+  window.__playTalkV33Loaded = true;
+
+  const ONLINE_SUPABASE_URL = 'https://kxfrlggnjkrquczjaiqb.supabase.co';
+  const ONLINE_SUPABASE_KEY = 'sb_publishable_okGGbpyPata_z311qSkTnQ_NhnFwZ5G';
+
+  const OnlineLogoutEngine = {
+    getClient() {
+      if (!window.supabase || !window.supabase.createClient) return null;
+      if (!window.__playTalkLogoutSupabaseClient) {
+        window.__playTalkLogoutSupabaseClient = window.supabase.createClient(ONLINE_SUPABASE_URL, ONLINE_SUPABASE_KEY);
+      }
+      return window.__playTalkLogoutSupabaseClient;
+    },
+
+    async logout() {
+      const client = this.getClient();
+      if (!client) {
+        AppEngine.showToast('Supabase не загрузился');
+        return;
+      }
+      try {
+        await client.auth.signOut();
+      } catch (error) {
+        console.error(error);
+      }
+      AppEngine.showToast('Вы вышли из аккаунта');
+      setTimeout(() => {
+        document.getElementById('authOverlayModal')?.classList.remove('hidden');
+        document.getElementById('activeChatBox')?.classList.add('hidden');
+        document.getElementById('chatPlaceholder')?.classList.remove('hidden');
+      }, 80);
+    },
+
+    patchSettingsLogoutButton() {
+      const buttons = [...document.querySelectorAll('#settingsContentBody button')];
+      const logoutButton = buttons.find(button => {
+        const text = (button.textContent || '').toLowerCase();
+        return text.includes('выйти') || text.includes('log out');
+      });
+      if (!logoutButton || logoutButton.dataset.v33Bound === '1') return;
+      logoutButton.dataset.v33Bound = '1';
+      logoutButton.onclick = async event => {
+        event.preventDefault();
+        if (!confirm('Выйти из аккаунта?')) return;
+        await this.logout();
+      };
+    }
+  };
+
+  window.OnlineLogoutEngine = OnlineLogoutEngine;
+
+  const oldSettingsRenderV33 = SettingsEngine.renderContent.bind(SettingsEngine);
+  SettingsEngine.renderContent = function(tab) {
+    oldSettingsRenderV33(tab);
+    setTimeout(() => OnlineLogoutEngine.patchSettingsLogoutButton(), 30);
+  };
+
+  const oldOpenSettingsModalV33 = AppEngine.openSettingsModal.bind(AppEngine);
+  AppEngine.openSettingsModal = function(tab) {
+    oldOpenSettingsModalV33(tab);
+    setTimeout(() => OnlineLogoutEngine.patchSettingsLogoutButton(), 30);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => OnlineLogoutEngine.patchSettingsLogoutButton(), 120);
+  });
+})();
+
+</script>
 </body>
 </html>
