@@ -6828,5 +6828,272 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 
 </script>
+
+<style id="pt-v31-auth-success-style">
+.online-success-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(6,10,18,.78);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .28s ease;
+}
+.online-success-overlay.show{
+  opacity:1;
+  pointer-events:auto;
+}
+.online-success-card{
+  width:min(320px, 86vw);
+  padding:28px 24px;
+  border-radius:28px;
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)), rgba(22,31,44,.98);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 30px 80px rgba(0,0,0,.38);
+  text-align:center;
+  transform:translateY(18px) scale(.96);
+  transition:transform .34s cubic-bezier(.16,1,.3,1);
+}
+.online-success-overlay.show .online-success-card{
+  transform:translateY(0) scale(1);
+}
+.online-success-check{
+  width:92px;
+  height:92px;
+  margin:0 auto 18px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle at top, rgba(255,255,255,.22), rgba(255,255,255,.08)), linear-gradient(135deg, #22c55e, #10b981);
+  color:#fff;
+  font-size:42px;
+  font-weight:900;
+  box-shadow:0 0 0 10px rgba(34,197,94,.12), 0 22px 44px rgba(16,185,129,.28);
+  animation:successPulseV31 1s ease;
+}
+@keyframes successPulseV31{
+  0%{transform:scale(.55);opacity:0}
+  60%{transform:scale(1.08);opacity:1}
+  100%{transform:scale(1)}
+}
+.online-success-title{
+  font-size:22px;
+  font-weight:800;
+  color:#fff;
+}
+.online-success-sub{
+  margin-top:8px;
+  color:var(--text-muted);
+  font-size:13px;
+  line-height:1.6;
+}
+
+</style>
+<script id="pt-v31-auth-success-script">
+(() => {
+  if (window.__playTalkV31Loaded) return;
+  window.__playTalkV31Loaded = true;
+
+  const clientUrl = 'https://kxfrlggnjkrquczjaiqb.supabase.co';
+  const clientKey = 'sb_publishable_okGGbpyPata_z311qSkTnQ_NhnFwZ5G';
+
+  function ensureSuccessOverlay() {
+    if (document.getElementById('onlineSuccessOverlayV31')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'onlineSuccessOverlayV31';
+    overlay.className = 'online-success-overlay';
+    overlay.innerHTML = `
+      <div class="online-success-card">
+        <div class="online-success-check">✓</div>
+        <div class="online-success-title">Готово</div>
+        <div class="online-success-sub">Аккаунт создан. Перенаправляю в главное меню…</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  function showSuccessOverlay() {
+    ensureSuccessOverlay();
+    const overlay = document.getElementById('onlineSuccessOverlayV31');
+    overlay.classList.add('show');
+  }
+
+  function hideSuccessOverlay() {
+    const overlay = document.getElementById('onlineSuccessOverlayV31');
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  function getClient() {
+    return (window.supabase && window.supabase.createClient)
+      ? window.supabase.createClient(clientUrl, clientKey)
+      : null;
+  }
+
+  async function patchRegistrationFlow() {
+    const authCard = document.querySelector('#authOverlayModal .auth-card');
+    if (!authCard) return;
+
+    authCard.addEventListener('submit', async event => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement)) return;
+      if (form.id !== 'onlineRegisterForm') return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const client = getClient();
+      if (!client) {
+        AppEngine.showToast('Supabase не загрузился');
+        return;
+      }
+
+      const username = (document.getElementById('onlineRegisterUsername')?.value || '').trim().toLowerCase().replace(/[^a-z0-9_а-яё.]/gi, '_');
+      const name = (document.getElementById('onlineRegisterName')?.value || '').trim();
+      const email = (document.getElementById('onlineRegisterEmail')?.value || '').trim().toLowerCase();
+      const password = (document.getElementById('onlineRegisterPassword')?.value || '');
+
+      if (!username || !name || !email || password.length < 6) {
+        AppEngine.showToast('Заполни ник, имя, почту и пароль');
+        return;
+      }
+
+      const existing = await client.from('profiles').select('username').eq('username', username).maybeSingle();
+      if (existing.data) {
+        AppEngine.showToast('Такой ник уже занят');
+        return;
+      }
+
+      const avatarImg = document.getElementById('onlineRegisterAvatarPreview');
+      const avatarUrl = avatarImg && !avatarImg.classList.contains('hidden') ? avatarImg.src : null;
+
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: { data: { username, display_name: name } }
+      });
+      if (error) {
+        AppEngine.showToast(error.message);
+        return;
+      }
+
+      const userId = data.user?.id;
+      if (!userId) {
+        AppEngine.showToast('Не удалось создать аккаунт');
+        return;
+      }
+
+      const profilePayload = {
+        id: userId,
+        username,
+        display_name: name,
+        avatar_url: avatarUrl,
+        bio: '',
+        last_seen: new Date().toISOString()
+      };
+      const profileResult = await client.from('profiles').upsert(profilePayload);
+      if (profileResult.error) {
+        AppEngine.showToast(profileResult.error.message);
+        return;
+      }
+
+      let activeSession = data.session || null;
+      if (!activeSession) {
+        const loginResult = await client.auth.signInWithPassword({ email, password });
+        if (loginResult.error) {
+          AppEngine.showToast(loginResult.error.message);
+          return;
+        }
+        activeSession = loginResult.data.session || null;
+      }
+
+      showSuccessOverlay();
+      setTimeout(() => {
+        hideSuccessOverlay();
+        AppEngine.showToast('✅ Аккаунт создан');
+      }, 1100);
+    }, true);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    ensureSuccessOverlay();
+    setTimeout(() => {
+      patchRegistrationFlow();
+    }, 250);
+  });
+})();
+
+</script>
+
+<script id="pt-v32-profile-avatar-view-script">
+(() => {
+  if (window.__playTalkV32Loaded) return;
+  window.__playTalkV32Loaded = true;
+
+  function bindProfileAvatarViewV32() {
+    const avatarIds = ['mySettingsAvatar', 'ptHeroAv'];
+    avatarIds.forEach(id => {
+      const node = document.getElementById(id);
+      if (!node || node.dataset.v32Bound === '1') return;
+      node.dataset.v32Bound = '1';
+      node.style.cursor = 'pointer';
+      node.onclick = () => {
+        if (!AppState.currentUser) return;
+        if (AppState.currentUser.avatar) {
+          const viewer = document.getElementById('fullscreenAvatarViewer');
+          const image = document.getElementById('fullscreenAvatarImg');
+          if (!viewer || !image) return;
+          image.style.background = `url(${AppState.currentUser.avatar}) center/cover`;
+          image.textContent = '';
+          viewer.classList.remove('hidden');
+        } else {
+          AppEngine.showToast('⚠️ Сначала поставь аватар');
+        }
+      };
+    });
+
+    const accountCircle = document.querySelector('#settingsContentBody .avatar-uploader-circle');
+    if (accountCircle && accountCircle.dataset.v32Bound !== '1') {
+      accountCircle.dataset.v32Bound = '1';
+      accountCircle.style.cursor = 'pointer';
+      accountCircle.onclick = () => {
+        if (!AppState.currentUser) return;
+        if (AppState.currentUser.avatar) {
+          const viewer = document.getElementById('fullscreenAvatarViewer');
+          const image = document.getElementById('fullscreenAvatarImg');
+          if (!viewer || !image) return;
+          image.style.background = `url(${AppState.currentUser.avatar}) center/cover`;
+          image.textContent = '';
+          viewer.classList.remove('hidden');
+        } else {
+          AvatarUploaderEngine.triggerFileInput('settings');
+        }
+      };
+    }
+  }
+
+  const oldOpenSettingsModalV32 = AppEngine.openSettingsModal.bind(AppEngine);
+  AppEngine.openSettingsModal = function(tab) {
+    oldOpenSettingsModalV32(tab);
+    setTimeout(bindProfileAvatarViewV32, 40);
+  };
+
+  const oldRenderContentV32 = SettingsEngine.renderContent.bind(SettingsEngine);
+  SettingsEngine.renderContent = function(tab) {
+    oldRenderContentV32(tab);
+    setTimeout(bindProfileAvatarViewV32, 40);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(bindProfileAvatarViewV32, 120);
+  });
+})();
+
+</script>
 </body>
 </html>
