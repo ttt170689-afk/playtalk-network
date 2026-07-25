@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayTalk Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="authScreen" class="screen auth-screen">
+      <div class="auth-card">
+        <div class="brand">PlayTalk Network</div>
+        <div class="auth-subtitle">Сетевая версия для Vercel + Supabase</div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth-tab="login">Вход</button>
+          <button class="auth-tab" data-auth-tab="register">Регистрация</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <label>Ник</label>
+          <input id="loginUsername" type="text" placeholder="temka_play" required />
+          <label>Пароль</label>
+          <input id="loginPassword" type="password" placeholder="••••••••" required />
+          <button type="submit" class="primary-btn">Войти</button>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden">
+          <label>Ник</label>
+          <input id="registerUsername" type="text" placeholder="temka_play" required />
+          <label>Имя</label>
+          <input id="registerDisplayName" type="text" placeholder="Темка" required />
+          <label>Пароль</label>
+          <input id="registerPassword" type="password" placeholder="минимум 6 символов" required />
+          <button type="submit" class="primary-btn">Создать аккаунт</button>
+        </form>
+
+        <div class="hint-box">
+          Вход идёт по нику и паролю. Внутри Supabase используется служебный email, но пользователю он не нужен.
+        </div>
+      </div>
+    </div>
+
+    <div id="chatScreen" class="screen chat-screen hidden">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div>
+            <div class="sidebar-title">Чаты</div>
+            <div class="sidebar-subtitle" id="meLabel">—</div>
+          </div>
+          <button id="logoutBtn" class="ghost-btn">Выйти</button>
+        </div>
+
+        <div class="search-wrap">
+          <input id="userSearch" type="text" placeholder="Поиск по нику" />
+        </div>
+
+        <div id="usersList" class="users-list"></div>
+      </aside>
+
+      <main class="chat-area">
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">Выбери пользователя</div>
+          <div class="empty-desc">Сетевая версия работает через Supabase realtime.</div>
+        </div>
+
+        <div id="chatPanel" class="chat-panel hidden">
+          <div class="chat-header">
+            <div class="chat-header-user">
+              <div id="chatAvatar" class="avatar large"></div>
+              <div>
+                <div id="chatTitle" class="chat-title">—</div>
+                <div id="chatStatus" class="chat-status">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="messagesBox" class="messages-box"></div>
+
+          <form id="messageForm" class="composer">
+            <input id="messageInput" type="text" placeholder="Сообщение..." autocomplete="off" />
+            <button type="submit" class="send-btn">Отправить</button>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
