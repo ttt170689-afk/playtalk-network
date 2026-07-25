@@ -7252,5 +7252,322 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 
 </script>
+
+<script id="pt-v35-realtime-and-id-fix-script">
+(() => {
+  if (window.__playTalkV35Loaded) return;
+  window.__playTalkV35Loaded = true;
+
+  const SUPABASE_URL = 'https://kxfrlggnjkrquczjaiqb.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_okGGbpyPata_z311qSkTnQ_NhnFwZ5G';
+
+  const V35 = {
+    client: null,
+    pollTimer: null,
+
+    getClient() {
+      if (this.client) return this.client;
+      if (!window.supabase || !window.supabase.createClient) return null;
+      this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return this.client;
+    },
+
+    safeText(value) {
+      return AppEngine.escapeHTML(String(value == null ? '' : value));
+    },
+
+    isOnline(lastSeen) {
+      if (!lastSeen) return false;
+      return Date.now() - new Date(lastSeen).getTime() < 20000;
+    },
+
+    formatLastSeen(lastSeen) {
+      if (!lastSeen) return 'offline';
+      const diff = Date.now() - new Date(lastSeen).getTime();
+      if (diff < 20000) return 'в сети';
+      if (diff < 60000) return 'был(а) только что';
+      if (diff < 3600000) return `был(а) ${Math.floor(diff / 60000)} мин назад`;
+      return 'offline';
+    },
+
+    chatKey(userId) {
+      return [AppState.currentUser.id, userId].sort().join('__');
+    },
+
+    dbUserToApp(row) {
+      return {
+        id: row.id,
+        name: row.display_name,
+        tag: '@' + row.username,
+        username: row.username,
+        email: row.auth_email || row.email || '',
+        bio: row.bio || '',
+        phone: row.phone || '',
+        color: row.color || this.computeColor(row.username),
+        avatar: row.avatar_url || '',
+        last_seen: row.last_seen || null
+      };
+    },
+
+    dbMessageToApp(row) {
+      return {
+        id: row.id,
+        senderId: row.sender_id,
+        recipientId: row.recipient_id,
+        text: row.body,
+        time: new Date(row.created_at).getTime(),
+        type: 'text'
+      };
+    },
+
+    computeColor(seed) {
+      const text = String(seed || 'playtalk');
+      let sum = 0;
+      for (const char of text) sum += char.charCodeAt(0);
+      const hue = Math.abs(sum) % 360;
+      return `linear-gradient(135deg, hsl(${hue} 82% 60%), hsl(${(hue + 55) % 360} 78% 55%))`;
+    },
+
+    async syncData() {
+      if (!AppState.currentUser) return;
+      const client = this.getClient();
+      if (!client) return;
+
+      const [profilesResult, messagesResult] = await Promise.all([
+        client.from('profiles').select('*').order('display_name'),
+        client.from('messages')
+          .select('*')
+          .or(`sender_id.eq.${AppState.currentUser.id},recipient_id.eq.${AppState.currentUser.id}`)
+          .order('created_at')
+      ]);
+
+      if (profilesResult.error) {
+        console.error(profilesResult.error);
+        return;
+      }
+      if (messagesResult.error) {
+        console.error(messagesResult.error);
+        return;
+      }
+
+      const users = (profilesResult.data || []).map(row => this.dbUserToApp(row));
+      const existingCurrent = AppState.currentUser;
+      AppState.users = users;
+      const refreshedCurrent = users.find(user => user.id === existingCurrent.id);
+      if (refreshedCurrent) {
+        AppState.currentUser = { ...existingCurrent, ...refreshedCurrent, email: existingCurrent.email || refreshedCurrent.email || '' };
+      }
+
+      AppState.messages = {};
+      (messagesResult.data || []).forEach(row => {
+        const key = [row.sender_id, row.recipient_id].sort().join('__');
+        AppState.messages[key] = AppState.messages[key] || [];
+        const msg = this.dbMessageToApp(row);
+        if (!AppState.messages[key].find(item => item.id === msg.id)) {
+          AppState.messages[key].push(msg);
+        }
+      });
+
+      if (AppState.activeChat) {
+        const fresh = AppState.users.find(user => user.id === AppState.activeChat.id);
+        if (fresh) {
+          AppState.activeChat = fresh;
+          this.renderActiveHeader();
+          MessagingEngine.renderMessages();
+        }
+      }
+      AppEngine.renderChatList();
+    },
+
+    renderActiveHeader() {
+      if (!AppState.activeChat) return;
+      const user = AppState.activeChat;
+      document.getElementById('chatPlaceholder').classList.add('hidden');
+      document.getElementById('activeChatBox').classList.remove('hidden');
+      document.getElementById('activeChatTitle').textContent = user.name;
+      const subtitleEl = document.getElementById('activeChatSubtitle');
+      subtitleEl.textContent = this.formatLastSeen(user.last_seen);
+      subtitleEl.className = 'subtitle' + (this.isOnline(user.last_seen) ? '' : ' offline');
+      const av = document.getElementById('activeChatAvatar');
+      if (user.avatar) {
+        av.style.background = `url(${user.avatar}) center/cover`;
+        av.textContent = '';
+      } else {
+        av.style.background = user.color;
+        av.textContent = (user.name || '?')[0].toUpperCase();
+      }
+    },
+
+    startPolling() {
+      if (this.pollTimer) return;
+      this.pollTimer = setInterval(() => {
+        this.syncData().catch(error => console.error(error));
+      }, 2500);
+    },
+
+    stopPolling() {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    },
+
+    patchRenderChatList() {
+      AppEngine.renderChatList = () => {
+        if (!AppState.currentUser) return;
+        const list = document.getElementById('chatsScrollList');
+        const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+        list.innerHTML = '';
+
+        const users = (AppState.users || []).filter(user => {
+          if (user.id === AppState.currentUser.id) return false;
+          const blob = [
+            user.name,
+            user.tag,
+            user.username,
+            user.email,
+            user.id,
+            user.id ? user.id.slice(0, 8) : ''
+          ].filter(Boolean).join(' ').toLowerCase();
+          return !query || blob.includes(query);
+        });
+
+        if (!users.length) {
+          list.innerHTML = `<div class="search-empty-state"><div class="icon">👥</div><div class="title" style="font-size:15px; font-weight:700; color:#fff; margin-bottom:6px;">Пока никого нет</div><div>Зарегистрируй второй аккаунт или зайди с другого устройства.</div></div>`;
+          return;
+        }
+
+        users.forEach(user => {
+          const key = this.chatKey(user.id);
+          const history = AppState.messages[key] || [];
+          const last = history[history.length - 1];
+          const lastText = last ? last.text : 'Сообщений пока нет';
+          const card = document.createElement('div');
+          card.className = 'chat-item-card' + (AppState.activeChat && AppState.activeChat.id === user.id ? ' active' : '');
+          card.onclick = () => AppEngine.openChat(user);
+          const avatarBg = user.avatar ? `url(${user.avatar}) center/cover` : user.color;
+          card.innerHTML = `
+            <div class="avatar" style="background:${avatarBg}">${user.avatar ? '' : this.safeText((user.name || '?')[0].toUpperCase())}${this.isOnline(user.last_seen) ? '<div class="status-indicator"></div>' : ''}</div>
+            <div class="chat-details">
+              <div class="chat-details-top">
+                <div class="chat-title">${this.safeText(user.name)}</div>
+                <div class="chat-time">${last ? AppEngine.formatTime(last.time) : ''}</div>
+              </div>
+              <div class="chat-details-bottom">
+                <div class="chat-last-message">${this.safeText(lastText)}</div>
+              </div>
+              <div class="channel-info-line">${this.safeText(user.tag)} · ID: ${this.safeText((user.id || '').slice(0, 8))}</div>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      };
+    },
+
+    patchOpenChat() {
+      AppEngine.openChat = user => {
+        AppState.activeChat = user;
+        this.renderActiveHeader();
+        AppEngine.renderChatList();
+        MessagingEngine.renderMessages();
+      };
+    },
+
+    patchProfileViewer() {
+      ProfileViewerEngine.openUserProfile = userId => {
+        const user = (AppState.users || []).find(item => item.id === userId);
+        if (!user) return;
+        ProfileViewerEngine.currentViewingUser = user;
+        const av = document.getElementById('profileBigAvatar');
+        if (user.avatar) {
+          av.style.background = `url(${user.avatar}) center/cover`;
+          av.textContent = '';
+        } else {
+          av.style.background = user.color;
+          av.textContent = (user.name || '?')[0].toUpperCase();
+        }
+        document.getElementById('profileName').textContent = user.name;
+        const statusEl = document.getElementById('profileStatus');
+        statusEl.textContent = this.formatLastSeen(user.last_seen);
+        statusEl.className = 'tg-profile-status' + (this.isOnline(user.last_seen) ? ' online' : '');
+        document.getElementById('profilePhone').textContent = user.phone || '—';
+        document.getElementById('profileBio').textContent = (user.bio || '—') + `\nID: ${(user.id || '').slice(0, 12)}`;
+        document.getElementById('profileTag').textContent = user.tag || ('@' + user.username);
+        document.getElementById('userProfileModal').classList.remove('hidden');
+      };
+    },
+
+    patchSendMessage() {
+      MessagingEngine.sendTextMessage = async () => {
+        const input = document.getElementById('msgTextInput');
+        const text = input.value.trim();
+        if (!text || !AppState.currentUser || !AppState.activeChat) return;
+        const client = this.getClient();
+        const { data, error } = await client.from('messages').insert({
+          sender_id: AppState.currentUser.id,
+          recipient_id: AppState.activeChat.id,
+          body: text
+        }).select().single();
+        if (error) {
+          AppEngine.showToast(error.message);
+          return;
+        }
+        const key = this.chatKey(AppState.activeChat.id);
+        AppState.messages[key] = AppState.messages[key] || [];
+        const msg = this.dbMessageToApp(data);
+        if (!AppState.messages[key].find(item => item.id === msg.id)) {
+          AppState.messages[key].push(msg);
+        }
+        input.value = '';
+        MessagingEngine.renderMessages();
+        AppEngine.renderChatList();
+      };
+    },
+
+    patchSearchPlaceholder() {
+      const input = document.getElementById('searchInput');
+      if (input) input.placeholder = 'Поиск по нику или ID';
+    },
+
+    patchLogout() {
+      const settingsButtonFinder = () => {
+        const buttons = [...document.querySelectorAll('#settingsContentBody button')];
+        return buttons.find(button => (button.textContent || '').toLowerCase().includes('выйти'));
+      };
+      const attach = () => {
+        const btn = settingsButtonFinder();
+        if (!btn || btn.dataset.v35Logout === '1') return;
+        btn.dataset.v35Logout = '1';
+        btn.onclick = async event => {
+          event.preventDefault();
+          const client = this.getClient();
+          await client.auth.signOut();
+          this.stopPolling();
+          document.getElementById('authOverlayModal')?.classList.remove('hidden');
+        };
+      };
+      const originalOpenSettings = AppEngine.openSettingsModal.bind(AppEngine);
+      AppEngine.openSettingsModal = tab => {
+        originalOpenSettings(tab);
+        setTimeout(attach, 40);
+      };
+    },
+
+    init() {
+      this.patchRenderChatList();
+      this.patchOpenChat();
+      this.patchProfileViewer();
+      this.patchSendMessage();
+      this.patchSearchPlaceholder();
+      this.patchLogout();
+      this.startPolling();
+      this.syncData().catch(error => console.error(error));
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => V35.init(), 1200);
+  });
+})();
+
+</script>
 </body>
 </html>
