@@ -7570,6 +7570,263 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 
 </script>
 
+<style id="pt-v37-contacts-only-style">
+.contact-empty-v37{padding:40px 20px;text-align:center;color:var(--text-muted)}.contact-empty-v37 .icon{font-size:44px;margin-bottom:10px}.contact-empty-v37 .title{font-size:15px;font-weight:800;color:#fff;margin-bottom:6px}.contact-pill-v37{display:inline-flex;align-items:center;gap:6px;margin-top:4px;padding:4px 8px;border-radius:999px;background:rgba(82,136,193,.12);border:1px solid rgba(82,136,193,.18);color:#dbeafe;font-size:10px;font-weight:700}.contact-mode-note-v37{padding:12px 14px;margin:10px 12px 0;border-radius:14px;background:rgba(82,136,193,.08);border:1px solid rgba(82,136,193,.16);color:#dcefff;font-size:12px;line-height:1.55}.contact-action-btn-v37{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700}.contact-badge-mini-v37{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:10px;color:#fff;font-weight:700;margin-top:4px}
+</style>
+
+<script id="pt-v37-contacts-only-script">
+(() => {
+  if (window.__playTalkV37Loaded) return;
+  window.__playTalkV37Loaded = true;
+
+  const ContactsOnlyEngine = {
+    storagePrefix: 'playtalk_saved_contacts_v37_',
+
+    key() {
+      return this.storagePrefix + (AppState.currentUser?.id || 'guest');
+    },
+
+    loadMap() {
+      try {
+        const raw = localStorage.getItem(this.key());
+        return raw ? JSON.parse(raw) : {};
+      } catch (error) {
+        return {};
+      }
+    },
+
+    saveMap(map) {
+      try {
+        localStorage.setItem(this.key(), JSON.stringify(map || {}));
+      } catch (error) {}
+    },
+
+    getAlias(userId) {
+      const map = this.loadMap();
+      return map[userId] || '';
+    },
+
+    displayName(user) {
+      return this.getAlias(user.id) || user.name || user.username || 'User';
+    },
+
+    hasContact(userId) {
+      return !!this.getAlias(userId);
+    },
+
+    upsertContact(user) {
+      const current = this.getAlias(user.id) || user.name || user.username || '';
+      const alias = prompt('Как назвать контакт?', current);
+      if (alias === null) return false;
+      const value = alias.trim();
+      if (!value) {
+        AppEngine.showToast('Имя контакта не может быть пустым');
+        return false;
+      }
+      const map = this.loadMap();
+      map[user.id] = value;
+      this.saveMap(map);
+      AppEngine.showToast('Контакт сохранён');
+      AppEngine.renderChatList();
+      return true;
+    },
+
+    removeContact(userId) {
+      const map = this.loadMap();
+      if (!map[userId]) return;
+      delete map[userId];
+      this.saveMap(map);
+      AppEngine.showToast('Контакт удалён');
+      if (AppState.activeChat && AppState.activeChat.id === userId) {
+        AppState.activeChat = null;
+        document.getElementById('activeChatBox')?.classList.add('hidden');
+        document.getElementById('chatPlaceholder')?.classList.remove('hidden');
+      }
+      AppEngine.renderChatList();
+    },
+
+    visibleUsers(query = '') {
+      const q = query.toLowerCase().trim();
+      return (AppState.users || []).filter(user => {
+        if (!AppState.currentUser || user.id === AppState.currentUser.id) return false;
+        if (!this.hasContact(user.id)) return false;
+        const alias = this.getAlias(user.id);
+        const blob = [alias, user.name, user.tag, user.username, user.id, (user.id || '').slice(0, 8)].filter(Boolean).join(' ').toLowerCase();
+        return !q || blob.includes(q);
+      });
+    },
+
+    patchChatList() {
+      AppEngine.renderChatList = () => {
+        if (!AppState.currentUser) return;
+        const list = document.getElementById('chatsScrollList');
+        const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+        const users = this.visibleUsers(query);
+        list.innerHTML = '';
+
+        if (!users.length) {
+          list.innerHTML = `
+            <div class="contact-empty-v37">
+              <div class="icon">📒</div>
+              <div class="title">Пока нет записанных контактов</div>
+              <div>Нажми ✏️ и добавь тех, кто у тебя сохранён как Папа, Мама и т.д.</div>
+            </div>
+          `;
+          return;
+        }
+
+        users.forEach(user => {
+          const alias = this.displayName(user);
+          const key = [AppState.currentUser.id, user.id].sort().join('__');
+          const history = AppState.messages[key] || [];
+          const last = history[history.length - 1];
+          const lastText = last ? last.text : 'Сообщений пока нет';
+          const card = document.createElement('div');
+          card.className = 'chat-item-card' + (AppState.activeChat && AppState.activeChat.id === user.id ? ' active' : '');
+          card.onclick = () => AppEngine.openChat(user);
+          const avatarBg = user.avatar ? `url(${user.avatar}) center/cover` : user.color;
+          card.innerHTML = `
+            <div class="avatar" style="background:${avatarBg}">${user.avatar ? '' : AppEngine.escapeHTML((alias || '?')[0].toUpperCase())}${window.V35 && V35.isOnline(user.last_seen) ? '<div class="status-indicator"></div>' : ''}</div>
+            <div class="chat-details">
+              <div class="chat-details-top">
+                <div class="chat-title">${AppEngine.escapeHTML(alias)}</div>
+                <div class="chat-time">${last ? AppEngine.formatTime(last.time) : ''}</div>
+              </div>
+              <div class="chat-details-bottom">
+                <div class="chat-last-message">${AppEngine.escapeHTML(lastText)}</div>
+              </div>
+              <div class="contact-pill-v37">${AppEngine.escapeHTML(user.tag || '@' + (user.username || 'user'))} · ID: ${AppEngine.escapeHTML((user.id || '').slice(0, 8))}</div>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      };
+    },
+
+    patchNewChatModal() {
+      AppEngine.openNewChatModal = () => {
+        this.renderPicker();
+        document.getElementById('newChatModal').classList.remove('hidden');
+      };
+      AppEngine.filterNewChatContacts = () => this.renderPicker();
+    },
+
+    renderPicker() {
+      const input = document.getElementById('newChatSearchInput');
+      const list = document.getElementById('newChatContactList');
+      if (!list) return;
+      const q = (input?.value || '').toLowerCase().trim();
+      const users = (AppState.users || []).filter(user => {
+        if (!AppState.currentUser || user.id === AppState.currentUser.id) return false;
+        const blob = [user.name, user.tag, user.username, user.id, (user.id || '').slice(0, 8)].filter(Boolean).join(' ').toLowerCase();
+        return !q || blob.includes(q);
+      });
+      if (!users.length) {
+        list.innerHTML = `<div class="online-empty-users">Никого не найдено</div>`;
+        return;
+      }
+      list.innerHTML = users.map(user => {
+        const saved = this.hasContact(user.id);
+        const alias = this.getAlias(user.id);
+        const avatarBg = user.avatar ? `url(${user.avatar}) center/cover` : user.color;
+        return `
+          <div class="contact-item-selectable" data-user-id="${user.id}">
+            <div class="avatar" style="width:42px; height:42px; font-size:14px; background:${avatarBg}">${user.avatar ? '' : AppEngine.escapeHTML((user.name || '?')[0].toUpperCase())}</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:14px; font-weight:700; color:#fff;">${AppEngine.escapeHTML(saved ? alias : user.name)}</div>
+              <div style="font-size:12px; color:var(--text-muted);">${AppEngine.escapeHTML(user.tag || '@' + user.username)} · ID: ${(user.id || '').slice(0,8)}</div>
+              <div class="contact-badge-mini-v37">${saved ? 'Уже записан' : 'Добавить в контакты'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      [...list.querySelectorAll('.contact-item-selectable')].forEach(item => {
+        item.onclick = () => {
+          const user = (AppState.users || []).find(entry => entry.id === item.dataset.userId);
+          if (!user) return;
+          if (!this.hasContact(user.id)) {
+            const added = this.upsertContact(user);
+            if (!added) return;
+          }
+          AppEngine.closeModal('newChatModal');
+          AppEngine.openChat(user);
+        };
+      });
+    },
+
+    patchOpenChat() {
+      const original = AppEngine.openChat.bind(AppEngine);
+      AppEngine.openChat = user => {
+        const patched = { ...user, name: this.displayName(user) };
+        original(patched);
+      };
+    },
+
+    patchProfileModal() {
+      const original = ProfileViewerEngine.openUserProfile.bind(ProfileViewerEngine);
+      ProfileViewerEngine.openUserProfile = userId => {
+        original(userId);
+        const user = (AppState.users || []).find(item => item.id === userId);
+        if (!user) return;
+        const modal = document.getElementById('userProfileModal');
+        if (!modal) return;
+        let actionRow = modal.querySelector('.contact-actions-v37');
+        if (!actionRow) {
+          actionRow = document.createElement('div');
+          actionRow.className = 'own-avatar-actions-v20 contact-actions-v37';
+          const section = modal.querySelector('.tg-actions-grid');
+          if (section) section.insertAdjacentElement('afterend', actionRow);
+        }
+        const saved = this.hasContact(user.id);
+        actionRow.innerHTML = `
+          <button class="contact-action-btn-v37" id="contactSaveBtnV37">${saved ? '✏️ Изменить имя контакта' : '➕ Сохранить в контакты'}</button>
+          ${saved ? '<button class="contact-action-btn-v37" id="contactRemoveBtnV37">🗑️ Удалить из контактов</button>' : ''}
+        `;
+        actionRow.querySelector('#contactSaveBtnV37').onclick = () => this.upsertContact(user);
+        const removeBtn = actionRow.querySelector('#contactRemoveBtnV37');
+        if (removeBtn) removeBtn.onclick = () => this.removeContact(user.id);
+      };
+    },
+
+    patchUserListHint() {
+      const header = document.querySelector('.sidebar');
+      if (header && !document.getElementById('contactModeNoteV37')) {
+        const note = document.createElement('div');
+        note.id = 'contactModeNoteV37';
+        note.className = 'contact-mode-note-v37';
+        note.textContent = 'В списке видны только записанные контакты. Через ✏️ можно добавить людей и назвать их как угодно: Папа, Мама и т.д.';
+        header.appendChild(note);
+      }
+      const search = document.getElementById('searchInput');
+      if (search) search.placeholder = 'Поиск по контакту или ID';
+    },
+
+    init() {
+      this.patchChatList();
+      this.patchNewChatModal();
+      this.patchOpenChat();
+      this.patchProfileModal();
+      this.patchUserListHint();
+      AppEngine.renderChatList();
+    }
+  };
+
+  window.ContactsOnlyEngine = ContactsOnlyEngine;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const boot = () => {
+      if (!AppState.currentUser) {
+        setTimeout(boot, 500);
+        return;
+      }
+      ContactsOnlyEngine.init();
+    };
+    setTimeout(boot, 1600);
+  });
+})();
+
+</script>
+
 <style id="pt-v36-ui-realtime-calls-style">
 .app-viewport.sidebar-collapsed .sidebar{width:92px !important;min-width:92px !important}.app-viewport.sidebar-collapsed .sidebar .search-input-wrapper,.app-viewport.sidebar-collapsed .sidebar .sidebar-mini-actions,.app-viewport.sidebar-collapsed .sidebar .chat-details,.app-viewport.sidebar-collapsed .sidebar .offline-solo-note,.app-viewport.sidebar-collapsed .sidebar .saved-subtabs,.app-viewport.sidebar-collapsed .sidebar .personal-section-strip,.app-viewport.sidebar-collapsed .sidebar .story-tip-badge{display:none !important}.app-viewport.sidebar-collapsed .sidebar .sidebar-header{justify-content:center;padding:12px 8px}.app-viewport.sidebar-collapsed .sidebar .menu-burger-btn{margin:0 auto}.app-viewport.sidebar-collapsed .sidebar .chat-item-card{justify-content:center;padding:10px 0}.app-viewport.sidebar-collapsed .sidebar .fab-create-btn{left:50% !important;right:auto !important;transform:translateX(-50%);bottom:16px !important}.app-viewport.sidebar-collapsed .sidebar .chat-item-card .avatar{width:44px;height:44px}.app-viewport.sidebar-collapsed .sidebar .status-indicator{right:4px}.pt-head{display:none !important}.settings-tabs-nav{display:none !important}#settingsModal .modal-content-card{max-width:760px !important}.simple-settings-wrap{display:flex;flex-direction:column;gap:18px}.simple-settings-section{padding:18px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}.simple-settings-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:14px}.simple-settings-desc{font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:12px}.simple-settings-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.simple-settings-wallpaper-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.simple-wallpaper-card{border-radius:16px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:var(--transition-fast);background:rgba(255,255,255,.03)}.simple-wallpaper-card:hover{transform:translateY(-2px)}.simple-wallpaper-card.active{border-color:var(--tg-accent);box-shadow:0 12px 28px rgba(82,136,193,.15)}.simple-wallpaper-preview{height:84px}.simple-wallpaper-label{padding:10px;text-align:center;font-size:11px;font-weight:700;color:#fff}.simple-upload-btn{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:700}.simple-upload-btn:hover{background:rgba(255,255,255,.09)}.typing-pill{display:inline-flex;align-items:center;gap:6px;color:#4ade80;font-size:11.5px;font-weight:700}.typing-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:typingPulseV36 1s infinite alternate}.typing-dot:nth-child(2){animation-delay:.18s}.typing-dot:nth-child(3){animation-delay:.36s}@keyframes typingPulseV36{from{opacity:.35;transform:translateY(0)}to{opacity:1;transform:translateY(-2px)}}.wallpaper-offer-card{display:flex;flex-direction:column;gap:10px;min-width:240px}.wallpaper-offer-preview{height:94px;border-radius:14px;border:1px solid rgba(255,255,255,.08)}.wallpaper-offer-actions{display:flex;gap:8px;flex-wrap:wrap}.wallpaper-offer-actions button{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700}.wallpaper-offer-actions .accept{background:rgba(82,136,193,.16);border-color:rgba(82,136,193,.22)}.header-icon-btn.calling{background:rgba(236,72,153,.12);color:#fff}.sticker-item-card img{display:block}.sticker-item-card{background:rgba(255,255,255,.03)}@media (max-width:768px){.simple-settings-wallpaper-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.app-viewport.sidebar-collapsed .sidebar{width:76px !important;min-width:76px !important}}
 </style>
