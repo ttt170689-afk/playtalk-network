@@ -6457,6 +6457,16 @@ const PT_EXTRA_VISUAL_LIBRARY = [
       options: { data: { username, display_name: name } }
     });
     if (error) {
+      if ((error.message || '').toLowerCase().includes('user already registered')) {
+        AppEngine.showToast('Такая почта уже зарегистрирована, просто войди');
+        OnlineState.authMode = 'login';
+        qa('.online-auth-tab').forEach(item => item.classList.toggle('active', item.dataset.authMode === 'login'));
+        q('#onlineLoginForm').classList.remove('hidden');
+        q('#onlineRegisterForm').classList.add('hidden');
+        q('#onlineLoginEmail').value = email;
+        q('#onlineLoginPassword').value = password;
+        return;
+      }
       AppEngine.showToast(error.message);
       return;
     }
