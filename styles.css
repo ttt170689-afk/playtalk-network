@@ -24,6 +24,7 @@ html, body {
 body { overflow: hidden; }
 button, input { font: inherit; }
 .hidden { display: none !important; }
+.hidden-file-input { display: none !important; }
 .screen { width: 100%; height: 100%; }
 .auth-screen {
   display: flex;
@@ -62,6 +63,41 @@ button, input { font: inherit; }
   background: rgba(255,255,255,0.04);
   color: var(--text);
   padding: 0 14px;
+}
+.avatar-upload-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+}
+.avatar-upload-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 2px solid rgba(90,162,255,0.35);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(90,162,255,0.24), rgba(124,92,255,0.24));
+}
+.avatar-upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-upload-placeholder {
+  font-size: 30px;
+}
+.avatar-upload-hint {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 .primary-btn {
   margin-top: 6px;

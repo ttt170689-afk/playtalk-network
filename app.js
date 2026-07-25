@@ -12,7 +12,8 @@ const state = {
   activeUser: null,
   messages: [],
   channel: null,
-  lastSeenTimer: null
+  lastSeenTimer: null,
+  registerAvatarDataUrl: ''
 };
 
 const el = {
@@ -20,11 +21,15 @@ const el = {
   chatScreen: document.getElementById('chatScreen'),
   loginForm: document.getElementById('loginForm'),
   registerForm: document.getElementById('registerForm'),
-  loginUsername: document.getElementById('loginUsername'),
+  loginEmail: document.getElementById('loginEmail'),
   loginPassword: document.getElementById('loginPassword'),
   registerUsername: document.getElementById('registerUsername'),
   registerDisplayName: document.getElementById('registerDisplayName'),
+  registerEmail: document.getElementById('registerEmail'),
   registerPassword: document.getElementById('registerPassword'),
+  registerAvatarFile: document.getElementById('registerAvatarFile'),
+  registerAvatarPreview: document.getElementById('registerAvatarPreview'),
+  registerAvatarPlaceholder: document.getElementById('registerAvatarPlaceholder'),
   authTabs: [...document.querySelectorAll('.auth-tab')],
   usersList: document.getElementById('usersList'),
   userSearch: document.getElementById('userSearch'),
@@ -45,22 +50,22 @@ function showToast(text) {
   el.toast.textContent = text;
   el.toast.classList.add('show');
   clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => el.toast.classList.remove('show'), 2500);
-}
-
-function pseudoEmail(username) {
-  return `${username.trim().toLowerCase()}@playtalk.local`;
+  showToast.timer = setTimeout(() => el.toast.classList.remove('show'), 2800);
 }
 
 function normalizeUsername(username) {
   return username.trim().toLowerCase().replace(/[^a-z0-9_а-яё.]/gi, '_');
 }
 
+function normalizeEmail(email) {
+  return email.trim().toLowerCase();
+}
+
 function avatarMarkup(user) {
   if (user.avatar_url) {
     return `url(${user.avatar_url}) center/cover`;
   }
-  const hue = Math.abs([...user.username].reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 360;
+  const hue = Math.abs([...(user.username || 'playtalk')].reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 360;
   return `linear-gradient(135deg, hsl(${hue} 85% 60%), hsl(${(hue + 55) % 360} 80% 55%))`;
 }
 
@@ -91,10 +96,43 @@ function switchAuthTab(tab) {
 
 async function ensureConfigured() {
   if (!client) {
-    showToast('Сначала вставь Supabase URL и anon key в config.js');
+    showToast('Сначала вставь Supabase URL и key в config.js');
     return false;
   }
   return true;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = event => resolve(event.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function resetAvatarPreview() {
+  state.registerAvatarDataUrl = '';
+  el.registerAvatarPreview.src = '';
+  el.registerAvatarPreview.classList.add('hidden');
+  el.registerAvatarPlaceholder.classList.remove('hidden');
+}
+
+async function handleAvatarSelect(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    resetAvatarPreview();
+    return;
+  }
+  if (!file.type.startsWith('image/')) {
+    showToast('Выбери изображение');
+    event.target.value = '';
+    return;
+  }
+  state.registerAvatarDataUrl = await readFileAsDataUrl(file);
+  el.registerAvatarPreview.src = state.registerAvatarDataUrl;
+  el.registerAvatarPreview.classList.remove('hidden');
+  el.registerAvatarPlaceholder.classList.add('hidden');
 }
 
 async function register(event) {
@@ -102,13 +140,19 @@ async function register(event) {
   if (!(await ensureConfigured())) return;
   const username = normalizeUsername(el.registerUsername.value);
   const displayName = el.registerDisplayName.value.trim();
+  const email = normalizeEmail(el.registerEmail.value);
   const password = el.registerPassword.value;
-  if (!username || !displayName || password.length < 6) {
-    showToast('Заполни все поля, пароль от 6 символов');
+  if (!username || !displayName || !email || password.length < 6) {
+    showToast('Заполни ник, имя, почту и пароль от 6 символов');
     return;
   }
 
-  const email = pseudoEmail(username);
+  const existing = await client.from('profiles').select('username').eq('username', username).maybeSingle();
+  if (existing.data) {
+    showToast('Такой ник уже занят');
+    return;
+  }
+
   const { data, error } = await client.auth.signUp({
     email,
     password,
@@ -129,6 +173,7 @@ async function register(event) {
     id: userId,
     username,
     display_name: displayName,
+    avatar_url: state.registerAvatarDataUrl || null,
     last_seen: new Date().toISOString()
   });
 
@@ -139,16 +184,17 @@ async function register(event) {
 
   showToast('Аккаунт создан, теперь входи');
   switchAuthTab('login');
-  el.loginUsername.value = username;
+  el.loginEmail.value = email;
   el.loginPassword.value = password;
+  el.registerForm.reset();
+  resetAvatarPreview();
 }
 
 async function login(event) {
   event.preventDefault();
   if (!(await ensureConfigured())) return;
-  const username = normalizeUsername(el.loginUsername.value);
+  const email = normalizeEmail(el.loginEmail.value);
   const password = el.loginPassword.value;
-  const email = pseudoEmail(username);
   const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) {
     showToast(error.message);
@@ -173,7 +219,7 @@ async function loadMe() {
     return;
   }
   state.me = data;
-  el.meLabel.textContent = `@${data.username}`;
+  el.meLabel.textContent = `${data.display_name} · @${data.username}`;
 }
 
 async function pingLastSeen() {
@@ -311,24 +357,22 @@ async function sendMessage(event) {
     recipient_id: state.activeUser.id,
     body
   });
-  if (error) {
-    showToast(error.message);
-  }
+  if (error) showToast(error.message);
 }
 
 async function bootstrap() {
   if (!client) {
-    showToast('Открой config.js и вставь Supabase URL/anon key');
+    showToast('Открой config.js и вставь Supabase URL/ключ');
     return;
   }
 
   const { data } = await client.auth.getSession();
   state.session = data.session;
-  updateScreen();
+  await updateScreen();
 
   client.auth.onAuthStateChange(async (_event, session) => {
     state.session = session;
-    updateScreen();
+    await updateScreen();
   });
 }
 
@@ -351,6 +395,7 @@ async function updateScreen() {
   await loadMe();
   await pingLastSeen();
   await loadUsers();
+  clearInterval(state.lastSeenTimer);
   state.lastSeenTimer = setInterval(async () => {
     await pingLastSeen();
     await loadUsers();
@@ -369,8 +414,10 @@ el.authTabs.forEach(button => {
 });
 el.loginForm.addEventListener('submit', login);
 el.registerForm.addEventListener('submit', register);
+el.registerAvatarFile.addEventListener('change', handleAvatarSelect);
 el.logoutBtn.addEventListener('click', logout);
 el.userSearch.addEventListener('input', renderUsers);
 el.messageForm.addEventListener('submit', sendMessage);
 
+resetAvatarPreview();
 bootstrap();

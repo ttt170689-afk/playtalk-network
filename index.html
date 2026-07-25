@@ -22,8 +22,8 @@
         </div>
 
         <form id="loginForm" class="auth-form">
-          <label>Ник</label>
-          <input id="loginUsername" type="text" placeholder="temka_play" required />
+          <label>Почта</label>
+          <input id="loginEmail" type="email" placeholder="you@example.com" required />
           <label>Пароль</label>
           <input id="loginPassword" type="password" placeholder="••••••••" required />
           <button type="submit" class="primary-btn">Войти</button>
@@ -34,13 +34,24 @@
           <input id="registerUsername" type="text" placeholder="temka_play" required />
           <label>Имя</label>
           <input id="registerDisplayName" type="text" placeholder="Темка" required />
+          <label>Почта</label>
+          <input id="registerEmail" type="email" placeholder="you@example.com" required />
+          <label>Фото профиля</label>
+          <div class="avatar-upload-box">
+            <label class="avatar-upload-circle" for="registerAvatarFile">
+              <img id="registerAvatarPreview" class="avatar-upload-preview hidden" alt="preview" />
+              <span id="registerAvatarPlaceholder" class="avatar-upload-placeholder">📷</span>
+            </label>
+            <input id="registerAvatarFile" type="file" accept="image/*" class="hidden-file-input" />
+            <div class="avatar-upload-hint">Можно загрузить фото сразу, а можно оставить пусто.</div>
+          </div>
           <label>Пароль</label>
           <input id="registerPassword" type="password" placeholder="минимум 6 символов" required />
           <button type="submit" class="primary-btn">Создать аккаунт</button>
         </form>
 
         <div class="hint-box">
-          Вход идёт по нику и паролю. Внутри Supabase используется служебный email, но пользователю он не нужен.
+          Обычная регистрация: ник, фото, имя, почта и пароль. Если в Supabase всё включено правильно, аккаунт создаётся без лишних шагов.
         </div>
       </div>
     </div>
