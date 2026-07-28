@@ -10387,5 +10387,2091 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a22505712ea5776c',t:'MTc4NTI1MzYzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- ===== PLAYTALK v41: 100+ функций ===== -->
+<style id="pt-v41-style">
+/* ===== PLAYTALK v41 ===== */
+:root { --pt-fs: 14.5px; --pt-bw: 68%; }
+.msg-bubble-card { font-size: var(--pt-fs) !important; }
+.msg-row-container { max-width: var(--pt-bw) !important; }
+.pt-compact .msg-row-container { margin-bottom: 1px !important; }
+.pt-compact .msg-bubble-card { padding: 5px 11px 4px !important; }
+.pt-compact .chat-item-card { padding: 7px 9px !important; }
+.pt-noavatars .chat-item-card .avatar { display: none !important; }
+.pt-flat .msg-bubble-card { box-shadow: none !important; }
+.pt-noanim *, .pt-noanim *::before, .pt-noanim *::after { animation: none !important; transition: none !important; }
+.pt-wide .sidebar { width: 420px !important; min-width: 420px !important; }
+.pt-blur .pt-att-img, .pt-blur .pt-att-video { filter: blur(17px); transition: filter .2s; }
+.pt-blur .pt-att-img:hover, .pt-blur .pt-att-video:hover { filter: none; }
+.pt-grouped .pt-author-label { display: none !important; }
+.pt-nogroup .pt-grouped { margin-top: 8px !important; }
+.pt-bigemo { font-size: 44px !important; background: transparent !important; box-shadow: none !important; line-height: 1.15; }
+
+/* счётчик символов */
+.pt-counter { position: absolute; right: 92px; bottom: 4px; font-size: 10.5px; color: var(--text-muted); pointer-events: none; }
+.pt-counter.warn { color: #f59e0b; font-weight: 800; }
+.chat-input-bar-container { position: relative; }
+
+/* быстрая панель */
+.pt-quick { display: flex; gap: 5px; flex-wrap: wrap; padding: 6px 12px 0; }
+.pt-q { width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.05); color: #fff; font-size: 14px; cursor: pointer; transition: .13s;
+  display: flex; align-items: center; justify-content: center; }
+.pt-q:hover { background: rgba(82,136,193,.26); transform: translateY(-1px); }
+
+/* отмена отправки */
+.pt-undo { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(70px); z-index: 100010;
+  display: flex; align-items: center; gap: 12px; padding: 11px 15px; border-radius: 14px; background: #1c2733;
+  border: 1px solid rgba(255,255,255,.14); box-shadow: 0 16px 42px rgba(0,0,0,.55); color: #fff; font-size: 13px;
+  opacity: 0; transition: .22s; pointer-events: none; max-width: 92vw; }
+.pt-undo.on { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.pt-undo .tx { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-undo button { padding: 6px 13px; border-radius: 9px; border: 0; background: var(--tg-accent); color: #fff; font-weight: 800; font-size: 12.5px; cursor: pointer; }
+.pt-undo .bar { position: absolute; left: 12px; right: 12px; bottom: 5px; height: 2px; background: rgba(255,255,255,.14); border-radius: 9px; overflow: hidden; }
+.pt-undo .bar i { display: block; height: 100%; width: 100%; background: var(--tg-accent); }
+
+/* модалка */
+.pt-modal { position: fixed; inset: 0; z-index: 100020; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.72); backdrop-filter: blur(7px); padding: 18px; }
+.pt-modal.hidden { display: none !important; }
+.pt-modal-card { width: 100%; max-width: 480px; max-height: 84vh; display: flex; flex-direction: column;
+  background: #17212b; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; box-shadow: 0 26px 70px rgba(0,0,0,.7); overflow: hidden; }
+.pt-modal-card.wide { max-width: 760px; }
+.pt-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.08); font-size: 15.5px; color: #fff; }
+.pt-modal-head span { cursor: pointer; opacity: .7; font-size: 17px; }
+.pt-modal-head span:hover { opacity: 1; }
+.pt-modal-body { padding: 16px 18px 20px; overflow-y: auto; }
+
+.pt-inp { width: 100%; padding: 11px 13px; border-radius: 11px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05); color: #fff; font-size: 14px; outline: none; margin-bottom: 11px; }
+.pt-inp:focus { border-color: var(--tg-accent); }
+.pt-ta { min-height: 84px; resize: vertical; font-family: inherit; }
+.pt-btn41 { width: 100%; padding: 11px; margin-top: 8px; border-radius: 11px; border: 1px solid rgba(255,255,255,.11);
+  background: rgba(255,255,255,.06); color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.pt-btn41:hover { background: rgba(82,136,193,.24); }
+.pt-btn41.danger { background: rgba(229,84,74,.15); border-color: rgba(229,84,74,.3); color: #ffb4ae; }
+
+/* палитра */
+.pt-pal { max-height: 60vh; overflow-y: auto; }
+.pt-pal-i { display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 12px; margin-bottom: 3px;
+  border: 0; border-radius: 10px; background: transparent; color: #fff; font-size: 13.5px; text-align: left; cursor: pointer; }
+.pt-pal-i:hover { background: rgba(82,136,193,.2); }
+.pt-pal-i .ic { font-size: 16px; width: 22px; text-align: center; }
+
+/* настройки */
+.pt-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.pt-tabs button { padding: 8px 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05); color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.pt-tabs button.on { background: rgba(82,136,193,.3); border-color: rgba(82,136,193,.45); }
+.pt-tab { display: none; } .pt-tab.on { display: block; }
+.pt-set { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; }
+.pt-set span { display: flex; flex-direction: column; }
+.pt-set b { font-size: 13.5px; color: #fff; font-weight: 600; }
+.pt-set i { font-size: 11.5px; color: var(--text-muted); font-style: normal; margin-top: 2px; }
+.pt-set input { width: 19px; height: 19px; accent-color: var(--tg-accent); cursor: pointer; flex-shrink: 0; }
+.pt-range { padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.pt-range span { display: block; font-size: 13px; color: #fff; margin-bottom: 7px; }
+.pt-range input { width: 100%; accent-color: var(--tg-accent); }
+.pt-themes41 { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+.pt-th { padding: 9px 13px; border-radius: 11px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05); color: #fff; font-size: 12.5px; cursor: pointer; }
+.pt-th.on { background: rgba(82,136,193,.32); border-color: var(--tg-accent); }
+
+/* списки */
+.pt-list41 { max-height: 56vh; overflow-y: auto; }
+.pt-li { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 11px 13px; margin-bottom: 6px;
+  border-radius: 11px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
+  color: #fff; text-decoration: none; font-size: 13px; }
+.pt-li b { font-weight: 600; word-break: break-word; }
+.pt-li i { font-size: 11px; color: var(--text-muted); font-style: normal; }
+.pt-li-x { position: absolute; top: 9px; right: 10px; cursor: pointer; opacity: .65; font-size: 13px; }
+.pt-li-x[data-s] { right: 34px; }
+.pt-li-x:hover { opacity: 1; }
+.pt-li.task { flex-direction: row; align-items: center; gap: 10px; }
+.pt-li.task .ck { cursor: pointer; font-size: 16px; }
+.pt-li.task.done b { text-decoration: line-through; opacity: .55; }
+.pt-strow { display: flex; justify-content: space-between; gap: 14px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 13.5px; }
+.pt-strow span { color: var(--text-muted); } .pt-strow b { color: #fff; }
+.pt-keys { display: flex; flex-direction: column; gap: 3px; }
+.pt-krow { display: flex; align-items: center; gap: 13px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.pt-krow kbd { min-width: 132px; padding: 5px 9px; border-radius: 7px; background: rgba(255,255,255,.09);
+  border: 1px solid rgba(255,255,255,.14); font-size: 11.5px; font-family: monospace; color: #fff; }
+.pt-krow span { font-size: 13px; color: var(--text-muted); }
+.pt-tpl-i { display: flex; gap: 7px; margin-bottom: 6px; }
+.pt-tpl-i .use { flex: 1; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 11px;
+  border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.04); color: #fff; text-align: left; cursor: pointer; }
+.pt-tpl-i .use b { font-size: 13px; } .pt-tpl-i .use span { font-size: 11.5px; color: var(--text-muted); }
+.pt-tpl-i .del { width: 40px; border-radius: 11px; border: 1px solid rgba(229,84,74,.25); background: rgba(229,84,74,.12); cursor: pointer; }
+.pt-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+.pt-gal-i { position: relative; aspect-ratio: 1; border-radius: 11px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,.05); }
+.pt-gal-i img { width: 100%; height: 100%; object-fit: cover; }
+.pt-gal-i .pl { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 27px; color: #fff; background: rgba(0,0,0,.35); }
+.pt-calc-out { padding: 15px; margin: 9px 0; border-radius: 11px; background: rgba(0,0,0,.28); text-align: right; font-size: 25px; font-weight: 800; color: #4ade80; }
+
+/* выделение */
+.pt-selbar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: rgba(82,136,193,.16);
+  border-bottom: 1px solid rgba(82,136,193,.26); flex-wrap: wrap; }
+.pt-selbar .n { font-size: 13px; font-weight: 800; color: #fff; margin-right: auto; }
+.pt-selbar button { padding: 6px 11px; border-radius: 9px; border: 1px solid rgba(255,255,255,.13);
+  background: rgba(255,255,255,.08); color: #fff; font-size: 12px; cursor: pointer; }
+.pt-selck { position: absolute; left: -26px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 15px; }
+.pt-selmode .msg-row-container { position: relative; margin-left: 30px; }
+
+/* замок */
+.pt-lock { position: fixed; inset: 0; z-index: 100030; display: flex; align-items: center; justify-content: center;
+  background: rgba(6,10,16,.97); backdrop-filter: blur(14px); }
+.pt-lock-card { text-align: center; padding: 34px; }
+.pt-lock-card .ic { font-size: 54px; margin-bottom: 14px; }
+.pt-lock-card .ti { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 20px; }
+.pt-lock-card input { width: 210px; padding: 13px; border-radius: 12px; border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.07); color: #fff; font-size: 21px; text-align: center; letter-spacing: 7px; outline: none; }
+.pt-lock-card button { display: block; width: 210px; margin: 11px auto 0; padding: 12px; border-radius: 12px;
+  border: 0; background: var(--tg-accent); color: #fff; font-weight: 800; cursor: pointer; }
+.pt-lock-card .er { color: #ff9b92; font-size: 12.5px; margin-top: 11px; min-height: 17px; }
+
+@media (max-width: 768px) {
+  .pt-modal-card { max-width: 100%; max-height: 90vh; }
+  .pt-quick { padding: 5px 8px 0; }
+  .pt-q { width: 30px; height: 30px; font-size: 13px; }
+  .pt-krow kbd { min-width: 96px; font-size: 10.5px; }
+  .pt-counter { right: 84px; }
+}
+
+</style>
+
+<script id="pt-v41-script">
+(() => {
+  if (window.__playTalkV41Loaded) return;
+  window.__playTalkV41Loaded = true;
+
+  const $ = id => document.getElementById(id);
+  const qs = s => document.querySelector(s);
+  const me = () => (typeof AppState !== 'undefined' && AppState.currentUser) || null;
+  const esc = s => { const d = document.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; };
+  const log = (...a) => console.log('%c[PlayTalk v41]', 'color:#f59e0b;font-weight:700', ...a);
+  const chatKey = id => [me().id, id].sort().join('__');
+  const msgs = () => (AppState.messages[chatKey(AppState.activeChat.id)] || []);
+  const flash = t => { try { window.PT40 ? PT40.flash ? PT40.flash(t) : toastMini(t) : toastMini(t); } catch (e) { toastMini(t); } };
+  function toastMini(text) {
+    let t = $('ptCopyToast');
+    if (!t) { t = document.createElement('div'); t.id = 'ptCopyToast'; t.className = 'pt-toast-copy'; document.body.appendChild(t); }
+    t.textContent = text; t.classList.add('on');
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 1800);
+  }
+  const S = {
+    get(k, d) { try { const v = localStorage.getItem('pt41_' + k + '_' + (me() ? me().id : 'g')); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('pt41_' + k + '_' + (me() ? me().id : 'g'), JSON.stringify(v)); } catch (e) {} }
+  };
+  const plain = m => { try { return window.PT40 && PT40.plainText ? PT40.plainText(m) : (m.text || ''); } catch (e) { return m.text || ''; } };
+
+  /* ============ НАСТРОЙКИ ============ */
+  const D = {
+    theme: 'default', fontSize: 14.5, compact: false, hideAvatars: false, flatBubbles: false,
+    bubbleWidth: 68, sendOnEnter: true, spellcheck: true, autoEmoticon: true, bigEmoji: true,
+    showSeconds: false, group: true, undoSend: true, undoMs: 5000, draft: true, counter: true,
+    soundIn: true, soundOut: true, volume: 0.35, desktopNotif: false, vibrate: false,
+    typingSend: true, readReceipts: true, blurPreview: false, pin: '', autoDownload: true,
+    animations: true, wideMode: false, showIds: false, clock24: true, spaceAvatars: true,
+    linkPreview: true, markdown: true, timeOnHover: true, quickBar: true, enterNewline: false
+  };
+  let cfg = Object.assign({}, D, S.get('cfg', {}));
+  const save = () => S.set('cfg', cfg);
+  const setCfg = (k, v) => { cfg[k] = v; save(); applyAll(); };
+
+  /* ============ 1-20: ВНЕШНИЙ ВИД ============ */
+  function applyAll() {
+    const r = document.documentElement, b = document.body;
+    r.style.setProperty('--pt-fs', cfg.fontSize + 'px');
+    r.style.setProperty('--pt-bw', cfg.bubbleWidth + '%');
+    b.classList.toggle('pt-compact', !!cfg.compact);
+    b.classList.toggle('pt-noavatars', !!cfg.hideAvatars);
+    b.classList.toggle('pt-flat', !!cfg.flatBubbles);
+    b.classList.toggle('pt-noanim', !cfg.animations);
+    b.classList.toggle('pt-wide', !!cfg.wideMode);
+    b.classList.toggle('pt-blur', !!cfg.blurPreview);
+    b.classList.toggle('pt-nogroup', !cfg.group);
+    const i = $('msgTextInput');
+    if (i) i.spellcheck = !!cfg.spellcheck;
+    themeApply(cfg.theme);
+  }
+  const THEMES = [
+    ['default', '🌌 Синяя', ''], ['theme-purple', '🔮 Фиолет', 'theme-purple'],
+    ['theme-emerald', '🌿 Изумруд', 'theme-emerald'], ['theme-amoled', '🖤 AMOLED', 'theme-amoled'],
+    ['theme-light', '☀️ Светлая', 'theme-light']
+  ];
+  function themeApply(id) {
+    const b = document.body;
+    THEMES.forEach(t => { if (t[2]) b.classList.remove(t[2]); });
+    const t = THEMES.find(x => x[0] === id);
+    if (t && t[2]) b.classList.add(t[2]);
+    cfg.theme = id; save();
+  }
+  function cycleTheme() {
+    const i = THEMES.findIndex(t => t[0] === cfg.theme);
+    themeApply(THEMES[(i + 1) % THEMES.length][0]);
+    flash(THEMES.find(t => t[0] === cfg.theme)[1]);
+  }
+  const fontStep = d => { cfg.fontSize = Math.max(11, Math.min(22, +(cfg.fontSize + d).toFixed(1))); save(); applyAll(); flash('Шрифт ' + cfg.fontSize + 'px'); };
+
+  /* ============ 21-30: ЧЕРНОВИКИ, ИСТОРИЯ, СЧЁТЧИК ============ */
+  const Draft = {
+    key: () => 'draft_' + (AppState.activeChat ? AppState.activeChat.id : 'x'),
+    save() { if (!cfg.draft || !AppState.activeChat) return; const i = $('msgTextInput'); if (i) S.set(this.key(), i.value || ''); },
+    load() { if (!cfg.draft || !AppState.activeChat) return; const i = $('msgTextInput'); if (!i) return; const v = S.get(this.key(), ''); if (v && !i.value) { i.value = v; counter(); } },
+    clear() { if (AppState.activeChat) S.set(this.key(), ''); }
+  };
+  const Hist = {
+    all: () => S.get('sendhist', []),
+    push(t) { const a = this.all(); a.unshift(t); S.set('sendhist', a.slice(0, 60)); this.i = -1; },
+    i: -1,
+    step(d) {
+      const a = this.all(); if (!a.length) return;
+      const i = $('msgTextInput'); if (!i) return;
+      this.i = Math.max(-1, Math.min(a.length - 1, this.i + d));
+      i.value = this.i === -1 ? '' : a[this.i];
+      counter();
+    }
+  };
+  function counter() {
+    if (!cfg.counter) { const c = $('ptCounter'); if (c) c.textContent = ''; return; }
+    const i = $('msgTextInput'); if (!i) return;
+    let c = $('ptCounter');
+    if (!c) {
+      const bar = qs('.chat-input-bar-container'); if (!bar) return;
+      c = document.createElement('div'); c.id = 'ptCounter'; c.className = 'pt-counter';
+      bar.appendChild(c);
+    }
+    const n = i.value.length;
+    c.textContent = n ? n + (n > 3000 ? ' ⚠️' : '') : '';
+    c.classList.toggle('warn', n > 3000);
+  }
+
+  /* ============ 31-45: ЭМОТИКОНЫ, КОМАНДЫ, ШАБЛОНЫ ============ */
+  const EMO = { ':)': '🙂', ':-)': '🙂', ':(': '🙁', ':-(': '🙁', ':D': '😃', ':-D': '😃', ';)': '😉', ';-)': '😉',
+    ':P': '😛', ':p': '😛', ':O': '😮', ':o': '😮', ':|': '😐', ":'(": '😢', '<3': '❤️', '</3': '💔',
+    ':*': '😘', '8)': '😎', 'XD': '😆', ':/': '😕', ':3': '😺', 'O:)': '😇', '>:(': '😠' };
+  function applyEmoticons(text) {
+    if (!cfg.autoEmoticon) return text;
+    let t = text;
+    Object.keys(EMO).forEach(k => {
+      t = t.split(' ' + k).join(' ' + EMO[k]);
+      if (t === k) t = EMO[k];
+      if (t.startsWith(k + ' ')) t = EMO[k] + t.slice(k.length);
+      if (t.endsWith(' ' + k)) t = t.slice(0, -k.length) + EMO[k];
+    });
+    return t;
+  }
+  const TPL = () => S.get('templates', [
+    { k: 'Привет', v: 'Привет! Как дела?' },
+    { k: 'Занят', v: 'Сейчас занят, наберу позже 👌' },
+    { k: 'Спасибо', v: 'Спасибо большое! 🙏' },
+    { k: 'Ок', v: 'Хорошо, договорились ✅' }
+  ]);
+  const setTPL = a => S.set('templates', a);
+
+  function runCommand(text) {
+    const t = text.trim();
+    if (!t.startsWith('/')) return null;
+    const [cmd, ...rest] = t.slice(1).split(' ');
+    const arg = rest.join(' ');
+    const c = cmd.toLowerCase();
+    if (c === 'shrug') return arg + ' ¯\\_(ツ)_/¯';
+    if (c === 'me') return '* ' + (me().name || 'Я') + ' ' + arg;
+    if (c === 'time') return '🕐 ' + new Date().toLocaleString('ru-RU');
+    if (c === 'date') return '📅 ' + new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (c === 'flip') return '(╯°□°)╯︵ ┻━┻ ' + arg;
+    if (c === 'unflip') return '┬─┬ ノ( ゜-゜ノ) ' + arg;
+    if (c === 'lenny') return '( ͡° ͜ʖ ͡°) ' + arg;
+    if (c === 'roll') { const n = parseInt(arg, 10) || 6; return '🎲 ' + (1 + Math.floor(Math.random() * n)) + ' из ' + n; }
+    if (c === 'coin') return '🪙 ' + (Math.random() < 0.5 ? 'Орёл' : 'Решка');
+    if (c === 'random') { const p = arg.split(',').map(s => s.trim()).filter(Boolean); return p.length ? '🎯 ' + p[Math.floor(Math.random() * p.length)] : null; }
+    if (c === 'upper') return arg.toUpperCase();
+    if (c === 'lower') return arg.toLowerCase();
+    if (c === 'reverse') return [...arg].reverse().join('');
+    if (c === 'space') return [...arg].join(' ');
+    if (c === 'clear') { clearChatLocal(); return ''; }
+    if (c === 'help') { Palette.open(); return ''; }
+    if (c === 'stats') { showStats(); return ''; }
+    if (c === 'theme') { cycleTheme(); return ''; }
+    return null;
+  }
+
+  /* ============ 46-60: ВЫДЕЛЕНИЕ, ЭКСПОРТ, СТАТИСТИКА ============ */
+  let selMode = false, selected = new Set();
+  function toggleSelect(on) {
+    selMode = on === undefined ? !selMode : on;
+    if (!selMode) selected.clear();
+    document.body.classList.toggle('pt-selmode', selMode);
+    selBar();
+    redraw();
+  }
+  function selBar() {
+    let b = $('ptSelBar');
+    if (!selMode) { if (b) b.remove(); return; }
+    if (!b) {
+      b = document.createElement('div'); b.id = 'ptSelBar'; b.className = 'pt-selbar';
+      const box = $('activeChatBox'); if (!box) return;
+      box.insertBefore(b, box.firstChild);
+    }
+    b.innerHTML = '<span class="n"></span>' +
+      '<button data-a="copy">📋 Копировать</button>' +
+      '<button data-a="fwd">📤 Переслать</button>' +
+      '<button data-a="del">🗑️ Удалить</button>' +
+      '<button data-a="exit">✕</button>';
+    b.querySelector('.n').textContent = 'Выбрано: ' + selected.size;
+    b.querySelectorAll('button').forEach(btn => btn.onclick = () => selAction(btn.dataset.a));
+  }
+  function selAction(a) {
+    const list = msgs().filter(m => selected.has(m.id));
+    if (a === 'exit') return toggleSelect(false);
+    if (!list.length) return flash('Ничего не выбрано');
+    if (a === 'copy') { copy(list.map(m => plain(m)).join('\n')); toggleSelect(false); }
+    if (a === 'fwd') { flash('Выдели одно сообщение для пересылки'); }
+    if (a === 'del') {
+      if (!confirm('Удалить ' + list.length + ' сообщений?')) return;
+      const arr = msgs();
+      list.forEach(m => { const i = arr.findIndex(x => x.id === m.id); if (i !== -1) arr.splice(i, 1); });
+      toggleSelect(false); redraw(); flash('🗑️ Удалено');
+    }
+  }
+  function copy(t) { try { if (window.PT40 && PT40.copyText) return PT40.copyText(t); } catch (e) {} 
+    const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); flash('✅ Скопировано'); } catch (e) {} ta.remove(); }
+
+  function exportChat(fmt) {
+    if (!AppState.activeChat) return flash('Открой чат');
+    const list = msgs(), name = AppState.activeChat.name || 'chat';
+    let out = '', mime = 'text/plain', ext = 'txt';
+    const who = m => m.senderId === me().id ? (me().name || 'Я') : name;
+    if (fmt === 'txt') {
+      out = 'Переписка с ' + name + '\nВыгружено: ' + new Date().toLocaleString('ru-RU') + '\n\n' +
+        list.map(m => '[' + new Date(m.time).toLocaleString('ru-RU') + '] ' + who(m) + ': ' + plain(m)).join('\n');
+    } else if (fmt === 'json') {
+      mime = 'application/json'; ext = 'json';
+      out = JSON.stringify({ chat: name, exported: new Date().toISOString(), messages: list.map(m => ({ from: who(m), time: new Date(m.time).toISOString(), text: plain(m) })) }, null, 2);
+    } else {
+      mime = 'text/html'; ext = 'html';
+      out = '<!doctype html><meta charset="utf-8"><title>Чат с ' + esc(name) + '</title>' +
+        '<style>body{font-family:system-ui;background:#0e1621;color:#eee;padding:24px;max-width:760px;margin:auto}' +
+        '.m{margin:8px 0;padding:10px 14px;border-radius:12px;background:#182533;max-width:70%}' +
+        '.o{background:#2b5278;margin-left:auto}.t{font-size:11px;opacity:.6;margin-top:4px}h1{font-size:20px}</style>' +
+        '<h1>Переписка с ' + esc(name) + '</h1>' +
+        list.map(m => '<div class="m ' + (m.senderId === me().id ? 'o' : '') + '">' + esc(plain(m)) +
+          '<div class="t">' + esc(who(m)) + ' · ' + new Date(m.time).toLocaleString('ru-RU') + '</div></div>').join('');
+    }
+    const blob = new Blob([out], { type: mime + ';charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'playtalk-' + name.replace(/[^\wа-яА-Я-]+/g, '_') + '.' + ext;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    flash('💾 Сохранено: .' + ext);
+  }
+
+  function showStats() {
+    if (!AppState.activeChat) return flash('Открой чат');
+    const list = msgs(), mine = list.filter(m => m.senderId === me().id);
+    const chars = list.reduce((s, m) => s + plain(m).length, 0);
+    const words = list.reduce((s, m) => s + plain(m).split(/\s+/).filter(Boolean).length, 0);
+    const days = {}; list.forEach(m => { days[new Date(m.time).toDateString()] = 1; });
+    const emo = (list.map(m => plain(m)).join('').match(/\p{Extended_Pictographic}/gu) || []).length;
+    const first = list.length ? new Date(list[0].time).toLocaleDateString('ru-RU') : '—';
+    const avg = list.length ? Math.round(chars / list.length) : 0;
+    modal('📊 Статистика чата', [
+      ['Всего сообщений', list.length], ['Ваших', mine.length], ['Собеседника', list.length - mine.length],
+      ['Символов', chars.toLocaleString('ru-RU')], ['Слов', words.toLocaleString('ru-RU')],
+      ['Средняя длина', avg + ' симв.'], ['Эмодзи', emo], ['Дней общения', Object.keys(days).length],
+      ['Первое сообщение', first]
+    ].map(r => '<div class="pt-strow"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>').join(''));
+  }
+
+  function clearChatLocal() {
+    if (!AppState.activeChat) return;
+    if (!confirm('Очистить историю этого чата на этом устройстве?')) return;
+    AppState.messages[chatKey(AppState.activeChat.id)] = [];
+    redraw(); flash('🧹 Очищено локально');
+  }
+
+  /* ============ 61-72: ЗАМЕТКИ, ЗАДАЧИ, НАПОМИНАНИЯ ============ */
+  const Notes = { all: () => S.get('notes', []), set: a => S.set('notes', a) };
+  const Tasks = { all: () => S.get('tasks', []), set: a => S.set('tasks', a) };
+  const Remind = { all: () => S.get('reminds', []), set: a => S.set('reminds', a) };
+
+  function checkReminders() {
+    const now = Date.now();
+    const left = Remind.all().filter(r => {
+      if (r.at <= now) { notify('⏰ Напоминание', r.text); return false; }
+      return true;
+    });
+    if (left.length !== Remind.all().length) Remind.set(left);
+  }
+  function addReminder() {
+    const t = prompt('Текст напоминания:'); if (!t) return;
+    const m = prompt('Через сколько минут?', '10'); const n = parseInt(m, 10);
+    if (!n || n < 1) return flash('Неверное время');
+    const a = Remind.all(); a.push({ text: t, at: Date.now() + n * 60000 }); Remind.set(a);
+    flash('⏰ Напомню через ' + n + ' мин');
+  }
+  function notify(title, body) {
+    flash(title + ': ' + body);
+    playSound('in');
+    if (cfg.desktopNotif && 'Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(title, { body, icon: '' }); } catch (e) {}
+    }
+  }
+
+  /* ============ 73-80: ЗВУКИ ============ */
+  let actx = null;
+  function playSound(kind) {
+    if (kind === 'in' && !cfg.soundIn) return;
+    if (kind === 'out' && !cfg.soundOut) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      const o = actx.createOscillator(), g = actx.createGain();
+      const f = kind === 'out' ? 880 : kind === 'err' ? 220 : 660;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001, cfg.volume), actx.currentTime + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.22);
+      o.connect(g); g.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + 0.25);
+      if (cfg.vibrate && navigator.vibrate) navigator.vibrate(kind === 'in' ? 40 : 20);
+    } catch (e) {}
+  }
+
+  /* ============ 81-88: PIN-ЗАМОК ============ */
+  function lockScreen() {
+    if (!cfg.pin) return flash('Сначала задай PIN в настройках');
+    let ov = $('ptLock');
+    if (!ov) {
+      ov = document.createElement('div'); ov.id = 'ptLock'; ov.className = 'pt-lock';
+      ov.innerHTML = '<div class="pt-lock-card"><div class="ic">🔒</div><div class="ti">PlayTalk заблокирован</div>' +
+        '<input type="password" id="ptPinIn" inputmode="numeric" placeholder="PIN" maxlength="8">' +
+        '<button id="ptPinGo">Разблокировать</button><div class="er" id="ptPinEr"></div></div>';
+      document.body.appendChild(ov);
+      const go = () => {
+        if ($('ptPinIn').value === cfg.pin) { ov.remove(); flash('🔓 Разблокировано'); }
+        else { $('ptPinEr').textContent = 'Неверный PIN'; $('ptPinIn').value = ''; }
+      };
+      $('ptPinGo').onclick = go;
+      $('ptPinIn').onkeydown = e => { if (e.key === 'Enter') go(); };
+    }
+    setTimeout(() => { const i = $('ptPinIn'); if (i) i.focus(); }, 60);
+  }
+  function setPin() {
+    const p = prompt('Новый PIN (цифры, до 8). Пусто = выключить:');
+    if (p === null) return;
+    cfg.pin = p.trim(); save();
+    flash(cfg.pin ? '🔒 PIN установлен' : 'PIN выключен');
+  }
+
+  /* ============ ОБЩИЕ ОКНА ============ */
+  function modal(title, html, wide) {
+    let m = $('ptModal');
+    if (!m) {
+      m = document.createElement('div'); m.id = 'ptModal'; m.className = 'pt-modal hidden';
+      m.innerHTML = '<div class="pt-modal-card"><div class="pt-modal-head"><b id="ptModalT"></b><span id="ptModalX">✕</span></div><div class="pt-modal-body" id="ptModalB"></div></div>';
+      document.body.appendChild(m);
+      m.onclick = e => { if (e.target === m) m.classList.add('hidden'); };
+      $('ptModalX').onclick = () => m.classList.add('hidden');
+    }
+    $('ptModalT').textContent = title;
+    $('ptModalB').innerHTML = html;
+    m.querySelector('.pt-modal-card').classList.toggle('wide', !!wide);
+    m.classList.remove('hidden');
+    return $('ptModalB');
+  }
+  const closeModal = () => { const m = $('ptModal'); if (m) m.classList.add('hidden'); };
+
+  function redraw() {
+    try { MessagingEngine.renderMessages(); } catch (e) {}
+    try { if (window.PT40 && PT40.decorate) PT40.decorate(); } catch (e) {}
+    setTimeout(() => { try { decorate41(); } catch (e) {} }, 0);
+  }
+
+  window.__PT41 = { $, qs, me, esc, log, chatKey, msgs, flash, S, cfg, D, save, setCfg, plain,
+    applyAll, themeApply, cycleTheme, fontStep, THEMES, Draft, Hist, counter, EMO, applyEmoticons,
+    TPL, setTPL, runCommand, toggleSelect, selBar, copy, exportChat, showStats, clearChatLocal,
+    Notes, Tasks, Remind, checkReminders, addReminder, notify, playSound, lockScreen, setPin,
+    modal, closeModal, redraw, selected, isSel: () => selMode };
+})();
+
+(() => {
+  if (!window.__PT41 || window.__PT41Boot) return;
+  window.__PT41Boot = true;
+  const P = window.__PT41;
+  const { $, qs, me, esc, log, msgs, flash, S, plain, modal, closeModal, redraw, playSound } = P;
+  let cfg = P.cfg;
+
+  /* ============ 89-95: ПАЛИТРА КОМАНД (Ctrl+K) ============ */
+  const ACTIONS = () => [
+    ['🎨', 'Сменить тему', () => P.cycleTheme()],
+    ['🔤', 'Шрифт больше', () => P.fontStep(1)],
+    ['🔡', 'Шрифт меньше', () => P.fontStep(-1)],
+    ['📐', 'Компактный режим', () => P.setCfg('compact', !cfg.compact)],
+    ['🫥', 'Скрыть аватарки', () => P.setCfg('hideAvatars', !cfg.hideAvatars)],
+    ['🫧', 'Плоские пузыри', () => P.setCfg('flatBubbles', !cfg.flatBubbles)],
+    ['🖥️', 'Широкий режим', () => P.setCfg('wideMode', !cfg.wideMode)],
+    ['✨', 'Анимации вкл/выкл', () => P.setCfg('animations', !cfg.animations)],
+    ['🌫️', 'Размыть превью', () => P.setCfg('blurPreview', !cfg.blurPreview)],
+    ['⚙️', 'Все настройки', () => Settings.open()],
+    ['🔍', 'Поиск в чате', () => { try { PT40.Search.open(); } catch (e) {} }],
+    ['🌐', 'Поиск по всем чатам', () => globalSearch()],
+    ['📊', 'Статистика чата', () => P.showStats()],
+    ['💾', 'Экспорт в TXT', () => P.exportChat('txt')],
+    ['📄', 'Экспорт в HTML', () => P.exportChat('html')],
+    ['🗄️', 'Экспорт в JSON', () => P.exportChat('json')],
+    ['✅', 'Выделить сообщения', () => P.toggleSelect(true)],
+    ['🧹', 'Очистить чат локально', () => P.clearChatLocal()],
+    ['⏰', 'Напоминание', () => P.addReminder()],
+    ['📝', 'Заметки', () => Notes.open()],
+    ['☑️', 'Задачи', () => Tasks.open()],
+    ['⭐', 'Избранные сообщения', () => starred()],
+    ['📌', 'Закреплённые', () => pinnedList()],
+    ['🖼️', 'Галерея чата', () => gallery()],
+    ['🔗', 'Ссылки из чата', () => linksList()],
+    ['📎', 'Файлы из чата', () => filesList()],
+    ['🔒', 'Заблокировать', () => P.lockScreen()],
+    ['🔑', 'Задать PIN', () => P.setPin()],
+    ['🎲', 'Случайное число', () => flash('🎲 ' + (1 + Math.floor(Math.random() * 6)))],
+    ['🪙', 'Орёл или решка', () => flash('🪙 ' + (Math.random() < 0.5 ? 'Орёл' : 'Решка'))],
+    ['🧮', 'Калькулятор', () => calc()],
+    ['⏱️', 'Таймер', () => timer()],
+    ['🕐', 'Вставить время', () => insert('🕐 ' + new Date().toLocaleTimeString('ru-RU'))],
+    ['📅', 'Вставить дату', () => insert('📅 ' + new Date().toLocaleDateString('ru-RU'))],
+    ['🤷', 'Вставить ¯\\_(ツ)_/¯', () => insert('¯\\_(ツ)_/¯')],
+    ['📋', 'Шаблоны ответов', () => templates()],
+    ['⌨️', 'Горячие клавиши', () => hotkeys()],
+    ['🔔', 'Разрешить уведомления', () => askNotif()],
+    ['📤', 'Резервная копия', () => backup()],
+    ['📥', 'Восстановить копию', () => restore()],
+    ['🧾', 'Инфо о чате', () => chatInfo()],
+    ['♻️', 'Сбросить настройки', () => { if (confirm('Сбросить все настройки?')) { P.cfg = Object.assign({}, P.D); cfg = P.cfg; P.save(); P.applyAll(); flash('♻️ Сброшено'); } }]
+  ];
+
+  const Palette = {
+    open() {
+      const b = modal('⌘ Команды', '<input class="pt-inp" id="ptPalIn" placeholder="Начни печатать...' + '"><div class="pt-pal" id="ptPalL"></div>', false);
+      const render = q => {
+        const ql = (q || '').toLowerCase();
+        const list = ACTIONS().filter(a => !ql || a[1].toLowerCase().includes(ql));
+        $('ptPalL').innerHTML = list.map((a, i) =>
+          '<button class="pt-pal-i" data-i="' + ACTIONS().indexOf(a) + '"><span class="ic">' + a[0] + '</span>' + esc(a[1]) + '</button>').join('')
+          || '<div class="pt-empty-hint">Ничего не найдено</div>';
+        $('ptPalL').querySelectorAll('.pt-pal-i').forEach(btn => btn.onclick = () => {
+          const act = ACTIONS()[+btn.dataset.i]; closeModal(); if (act) act[2]();
+        });
+      };
+      render('');
+      const inp = $('ptPalIn');
+      inp.oninput = e => render(e.target.value);
+      inp.onkeydown = e => {
+        if (e.key === 'Enter') { const f = $('ptPalL').querySelector('.pt-pal-i'); if (f) f.click(); }
+        if (e.key === 'Escape') closeModal();
+      };
+      setTimeout(() => inp.focus(), 60);
+    }
+  };
+  P.Palette = Palette;
+
+  /* ============ 96-110: ПАНЕЛЬ НАСТРОЕК ============ */
+  const Settings = {
+    open() {
+      const row = (k, t, d) => '<label class="pt-set"><span><b>' + t + '</b>' + (d ? '<i>' + d + '</i>' : '') + '</span>' +
+        '<input type="checkbox" data-k="' + k + '"' + (cfg[k] ? ' checked' : '') + '></label>';
+      const html =
+        '<div class="pt-tabs">' +
+          '<button class="on" data-t="look">Вид</button><button data-t="chat">Чат</button>' +
+          '<button data-t="snd">Звук</button><button data-t="priv">Приватность</button><button data-t="data">Данные</button>' +
+        '</div>' +
+        '<div class="pt-tab on" data-p="look">' +
+          '<div class="pt-themes41">' + P.THEMES.map(t => '<button class="pt-th' + (cfg.theme === t[0] ? ' on' : '') + '" data-th="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
+          '<div class="pt-range"><span>Размер шрифта: <b id="ptFsV">' + cfg.fontSize + '</b> px</span>' +
+          '<input type="range" min="11" max="22" step="0.5" value="' + cfg.fontSize + '" data-r="fontSize"></div>' +
+          '<div class="pt-range"><span>Ширина пузыря: <b id="ptBwV">' + cfg.bubbleWidth + '</b> %</span>' +
+          '<input type="range" min="45" max="92" step="1" value="' + cfg.bubbleWidth + '" data-r="bubbleWidth"></div>' +
+          row('compact', 'Компактный режим', 'Меньше отступов') +
+          row('hideAvatars', 'Скрыть аватарки') +
+          row('flatBubbles', 'Плоские пузыри', 'Без теней') +
+          row('wideMode', 'Широкий режим') +
+          row('animations', 'Анимации') +
+          row('group', 'Группировать подряд идущие') +
+        '</div>' +
+        '<div class="pt-tab" data-p="chat">' +
+          row('sendOnEnter', 'Enter отправляет', 'Иначе — Ctrl+Enter') +
+          row('markdown', 'Форматирование **жирный**') +
+          row('autoEmoticon', 'Смайлы :) → 🙂') +
+          row('bigEmoji', 'Крупные эмодзи', 'Если в сообщении только эмодзи') +
+          row('draft', 'Сохранять черновики') +
+          row('counter', 'Счётчик символов') +
+          row('undoSend', 'Отмена отправки', 'Кнопка «Отменить» на 5 сек') +
+          row('spellcheck', 'Проверка орфографии') +
+          row('showSeconds', 'Секунды во времени') +
+          row('timeOnHover', 'Полная дата при наведении') +
+          row('quickBar', 'Панель быстрых действий') +
+        '</div>' +
+        '<div class="pt-tab" data-p="snd">' +
+          row('soundIn', 'Звук входящих') + row('soundOut', 'Звук отправки') +
+          '<div class="pt-range"><span>Громкость: <b id="ptVolV">' + Math.round(cfg.volume * 100) + '</b>%</span>' +
+          '<input type="range" min="0" max="100" step="5" value="' + Math.round(cfg.volume * 100) + '" data-r="volume100"></div>' +
+          row('vibrate', 'Вибрация', 'На телефоне') +
+          row('desktopNotif', 'Уведомления браузера') +
+          '<button class="pt-btn41" id="ptTestSnd">🔊 Проверить звук</button>' +
+          '<button class="pt-btn41" id="ptAskNotif">🔔 Разрешить уведомления</button>' +
+        '</div>' +
+        '<div class="pt-tab" data-p="priv">' +
+          row('readReceipts', 'Отчёты о прочтении') +
+          row('typingSend', 'Показывать «печатает»') +
+          row('blurPreview', 'Размывать фото до наведения') +
+          row('autoDownload', 'Автозагрузка медиа') +
+          '<button class="pt-btn41" id="ptSetPin">🔑 ' + (cfg.pin ? 'Изменить' : 'Задать') + ' PIN</button>' +
+          '<button class="pt-btn41" id="ptLockNow">🔒 Заблокировать сейчас</button>' +
+        '</div>' +
+        '<div class="pt-tab" data-p="data">' +
+          '<button class="pt-btn41" id="ptExpT">💾 Экспорт чата в TXT</button>' +
+          '<button class="pt-btn41" id="ptExpH">📄 Экспорт в HTML</button>' +
+          '<button class="pt-btn41" id="ptExpJ">🗄️ Экспорт в JSON</button>' +
+          '<button class="pt-btn41" id="ptBk">📤 Резервная копия настроек</button>' +
+          '<button class="pt-btn41" id="ptRs">📥 Восстановить копию</button>' +
+          '<button class="pt-btn41 danger" id="ptRst">♻️ Сбросить настройки</button>' +
+        '</div>';
+      const b = modal('⚙️ Настройки PlayTalk', html, true);
+
+      b.querySelectorAll('.pt-tabs button').forEach(t => t.onclick = () => {
+        b.querySelectorAll('.pt-tabs button').forEach(x => x.classList.remove('on'));
+        b.querySelectorAll('.pt-tab').forEach(x => x.classList.remove('on'));
+        t.classList.add('on');
+        b.querySelector('[data-p="' + t.dataset.t + '"]').classList.add('on');
+      });
+      b.querySelectorAll('input[type=checkbox]').forEach(c => c.onchange = () => P.setCfg(c.dataset.k, c.checked));
+      b.querySelectorAll('.pt-th').forEach(t => t.onclick = () => {
+        b.querySelectorAll('.pt-th').forEach(x => x.classList.remove('on'));
+        t.classList.add('on'); P.themeApply(t.dataset.th);
+      });
+      b.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => {
+        const k = r.dataset.r;
+        if (k === 'volume100') { cfg.volume = +r.value / 100; $('ptVolV').textContent = r.value; }
+        else { cfg[k] = +r.value; const el = $(k === 'fontSize' ? 'ptFsV' : 'ptBwV'); if (el) el.textContent = r.value; }
+        P.save(); P.applyAll();
+      });
+      const on = (id, fn) => { const e = $(id); if (e) e.onclick = fn; };
+      on('ptTestSnd', () => playSound('in'));
+      on('ptAskNotif', askNotif);
+      on('ptSetPin', () => P.setPin());
+      on('ptLockNow', () => { closeModal(); P.lockScreen(); });
+      on('ptExpT', () => P.exportChat('txt'));
+      on('ptExpH', () => P.exportChat('html'));
+      on('ptExpJ', () => P.exportChat('json'));
+      on('ptBk', backup); on('ptRs', restore);
+      on('ptRst', () => { if (confirm('Сбросить все настройки?')) { P.cfg = Object.assign({}, P.D); cfg = P.cfg; P.save(); P.applyAll(); closeModal(); flash('♻️ Сброшено'); } });
+    }
+  };
+  P.Settings = Settings;
+
+  function askNotif() {
+    if (!('Notification' in window)) return flash('Браузер не поддерживает');
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') { P.setCfg('desktopNotif', true); flash('🔔 Уведомления включены'); }
+      else flash('Уведомления отклонены');
+    });
+  }
+  function backup() {
+    const data = { cfg, notes: P.Notes.all(), tasks: P.Tasks.all(), templates: P.TPL(), v: 41 };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = 'playtalk-settings.json'; a.click();
+    flash('📤 Копия сохранена');
+  }
+  function restore() {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = '.json';
+    i.onchange = () => {
+      const f = i.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const d = JSON.parse(r.result);
+          if (d.cfg) { P.cfg = Object.assign({}, P.D, d.cfg); cfg = P.cfg; P.save(); P.applyAll(); }
+          if (d.notes) P.Notes.set(d.notes);
+          if (d.tasks) P.Tasks.set(d.tasks);
+          if (d.templates) P.setTPL(d.templates);
+          flash('📥 Восстановлено'); closeModal();
+        } catch (e) { flash('❌ Файл повреждён'); }
+      };
+      r.readAsText(f);
+    };
+    i.click();
+  }
+
+  /* ============ 111-125: ИНСТРУМЕНТЫ ============ */
+  const insert = t => { const i = $('msgTextInput'); if (!i) return; i.value += (i.value && !i.value.endsWith(' ') ? ' ' : '') + t; i.focus(); P.counter(); };
+  P.insert = insert;
+
+  function calc() {
+    const b = modal('🧮 Калькулятор', '<input class="pt-inp" id="ptCalcIn" placeholder="2+2*10"><div class="pt-calc-out" id="ptCalcOut">—</div><button class="pt-btn41" id="ptCalcSend">Отправить результат</button>');
+    const ev = () => {
+      const v = $('ptCalcIn').value.replace(/[^0-9+\-*/(). %]/g, '');
+      try { const r = Function('"use strict";return (' + (v || '0') + ')')(); $('ptCalcOut').textContent = isFinite(r) ? r : '—'; }
+      catch (e) { $('ptCalcOut').textContent = '—'; }
+    };
+    $('ptCalcIn').oninput = ev;
+    $('ptCalcIn').onkeydown = e => { if (e.key === 'Enter') ev(); };
+    $('ptCalcSend').onclick = () => { insert($('ptCalcIn').value + ' = ' + $('ptCalcOut').textContent); closeModal(); };
+    setTimeout(() => $('ptCalcIn').focus(), 50);
+  }
+
+  function timer() {
+    const m = prompt('Таймер на сколько минут?', '5'); const n = parseFloat(m);
+    if (!n || n <= 0) return;
+    flash('⏱️ Таймер на ' + n + ' мин');
+    setTimeout(() => P.notify('⏱️ Таймер', n + ' мин прошло'), n * 60000);
+  }
+
+  function templates() {
+    const draw = () => {
+      const list = P.TPL();
+      const b = modal('📋 Шаблоны ответов',
+        '<div class="pt-tpl">' + list.map((t, i) =>
+          '<div class="pt-tpl-i"><button class="use" data-i="' + i + '"><b>' + esc(t.k) + '</b><span>' + esc(t.v) + '</span></button>' +
+          '<button class="del" data-d="' + i + '">🗑️</button></div>').join('') +
+        '</div><button class="pt-btn41" id="ptTplAdd">➕ Новый шаблон</button>');
+      b.querySelectorAll('.use').forEach(x => x.onclick = () => { insert(list[+x.dataset.i].v); closeModal(); });
+      b.querySelectorAll('.del').forEach(x => x.onclick = () => { list.splice(+x.dataset.d, 1); P.setTPL(list); draw(); });
+      $('ptTplAdd').onclick = () => {
+        const k = prompt('Название:'); if (!k) return;
+        const v = prompt('Текст:'); if (!v) return;
+        list.push({ k, v }); P.setTPL(list); draw();
+      };
+    };
+    draw();
+  }
+
+  function hotkeys() {
+    const K = [['Ctrl + K', 'Палитра команд'], ['Ctrl + F', 'Поиск в чате'], ['Ctrl + Shift + F', 'Поиск по всем чатам'],
+      ['Ctrl + ,', 'Настройки'], ['Ctrl + E', 'Экспорт чата'], ['Ctrl + L', 'Заблокировать'],
+      ['Ctrl + ↑ / ↓', 'История отправленного'], ['Ctrl + Shift + T', 'Сменить тему'],
+      ['Ctrl + +/−', 'Размер шрифта'], ['Esc', 'Закрыть окно'], ['/', 'Фокус в поле ввода'],
+      ['↑ в пустом поле', 'Изменить последнее'], ['Двойной клик', 'Реакция ❤️'],
+      ['Правый клик', 'Меню сообщения'], ['Ctrl + Enter', 'Отправить (если Enter = перенос)']];
+    modal('⌨️ Горячие клавиши', '<div class="pt-keys">' + K.map(k =>
+      '<div class="pt-krow"><kbd>' + esc(k[0]) + '</kbd><span>' + esc(k[1]) + '</span></div>').join('') + '</div>');
+  }
+
+  function chatInfo() {
+    if (!AppState.activeChat) return flash('Открой чат');
+    const u = AppState.activeChat, list = msgs();
+    modal('🧾 О чате', [
+      ['Имя', esc(u.name || '—')], ['Тег', esc(u.tag || '—')],
+      ['ID', '<code>' + esc((u.id || '').slice(0, 18)) + '</code>'],
+      ['Сообщений', list.length], ['Телефон', esc(u.phone || '—')], ['О себе', esc(u.bio || '—')]
+    ].map(r => '<div class="pt-strow"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>').join('') +
+      '<button class="pt-btn41" id="ptCopyId">📋 Копировать ID</button>');
+    const c = $('ptCopyId'); if (c) c.onclick = () => P.copy(u.id || '');
+  }
+
+  /* ============ 126-140: СПИСКИ (галерея, ссылки, файлы, избранное) ============ */
+  const decode = t => { try { return window.PTFiles && PTFiles.decode ? PTFiles.decode(t) : null; } catch (e) { return null; } };
+
+  function gallery() {
+    if (!AppState.activeChat) return flash('Открой чат');
+    const imgs = msgs().map(m => decode(m.text)).filter(x => x && (x.k === 'image' || x.k === 'video') && (x.u || x.d));
+    if (!imgs.length) return flash('В этом чате нет медиа');
+    const b = modal('🖼️ Галерея (' + imgs.length + ')', '<div class="pt-gal">' + imgs.map((x, i) =>
+      '<div class="pt-gal-i" data-i="' + i + '">' + (x.k === 'video' ? '<div class="pl">▶</div>' : '') +
+      '<img src="' + esc(x.u || x.d) + '" loading="lazy"></div>').join('') + '</div>', true);
+    b.querySelectorAll('.pt-gal-i').forEach(el => el.onclick = () => {
+      const x = imgs[+el.dataset.i];
+      try { PTFiles.lightbox(x.u || x.d, x.k, x.n); } catch (e) { window.open(x.u || x.d, '_blank'); }
+    });
+  }
+
+  function linksList() {
+    if (!AppState.activeChat) return flash('Открой чат');
+    const out = [];
+    msgs().forEach(m => { (String(m.text || '').match(/https?:\/\/[^\s<]+/g) || []).forEach(u => out.push({ u, t: m.time })); });
+    if (!out.length) return flash('Ссылок нет');
+    modal('🔗 Ссылки (' + out.length + ')', '<div class="pt-list41">' + out.map(l =>
+      '<a class="pt-li" href="' + esc(l.u) + '" target="_blank" rel="noopener"><b>' + esc(l.u.slice(0, 70)) + '</b>' +
+      '<i>' + new Date(l.t).toLocaleDateString('ru-RU') + '</i></a>').join('') + '</div>');
+  }
+
+  function filesList() {
+    if (!AppState.activeChat) return flash('Открой чат');
+    const fs = msgs().map(m => decode(m.text)).filter(x => x && x.k === 'file' && x.u);
+    if (!fs.length) return flash('Файлов нет');
+    modal('📎 Файлы (' + fs.length + ')', '<div class="pt-list41">' + fs.map(f =>
+      '<a class="pt-li" href="' + esc(f.u) + '" download="' + esc(f.n) + '" target="_blank"><b>' + esc(f.n) + '</b>' +
+      '<i>' + (window.PTFiles && PTFiles.fmtSize ? PTFiles.fmtSize(f.s) : '') + '</i></a>').join('') + '</div>');
+  }
+
+  function starred() {
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem('pt40_stars_' + me().id) || '[]'); } catch (e) {}
+    const all = [];
+    Object.keys(AppState.messages || {}).forEach(k => (AppState.messages[k] || []).forEach(m => { if (ids.includes(m.id)) all.push(m); }));
+    if (!all.length) return flash('Избранного нет. Правый клик → В избранное');
+    modal('⭐ Избранное (' + all.length + ')', '<div class="pt-list41">' + all.map(m =>
+      '<div class="pt-li"><b>' + esc(plain(m).slice(0, 120)) + '</b><i>' + new Date(m.time).toLocaleString('ru-RU') + '</i></div>').join('') + '</div>');
+  }
+
+  function pinnedList() {
+    let p = {};
+    try { p = JSON.parse(localStorage.getItem('pt40_pinned_' + me().id) || '{}'); } catch (e) {}
+    const rows = Object.keys(p).map(cid => {
+      const u = (AppState.users || []).find(x => x.id === cid);
+      let txt = '';
+      Object.keys(AppState.messages || {}).forEach(k => (AppState.messages[k] || []).forEach(m => { if (m.id === p[cid]) txt = plain(m); }));
+      return { n: u ? u.name : cid.slice(0, 8), t: txt };
+    }).filter(r => r.t);
+    if (!rows.length) return flash('Закреплённых нет');
+    modal('📌 Закреплённые', '<div class="pt-list41">' + rows.map(r =>
+      '<div class="pt-li"><b>' + esc(r.t.slice(0, 120)) + '</b><i>' + esc(r.n) + '</i></div>').join('') + '</div>');
+  }
+
+  function globalSearch() {
+    const b = modal('🌐 Поиск по всем чатам', '<input class="pt-inp" id="ptGsIn" placeholder="Что ищем?"><div class="pt-list41" id="ptGsL"></div>', true);
+    const run = q => {
+      const ql = (q || '').toLowerCase().trim();
+      if (!ql) { $('ptGsL').innerHTML = '<div class="pt-empty-hint">Введи запрос</div>'; return; }
+      const res = [];
+      Object.keys(AppState.messages || {}).forEach(k => {
+        const other = k.split('__').find(x => x !== me().id);
+        const u = (AppState.users || []).find(x => x.id === other);
+        (AppState.messages[k] || []).forEach(m => {
+          const t = plain(m);
+          if (t.toLowerCase().includes(ql)) res.push({ n: u ? u.name : 'Чат', t, time: m.time, u });
+        });
+      });
+      $('ptGsL').innerHTML = res.length ? res.slice(0, 120).map(r =>
+        '<div class="pt-li"><b>' + esc(r.t.slice(0, 110)) + '</b><i>' + esc(r.n) + ' · ' + new Date(r.time).toLocaleDateString('ru-RU') + '</i></div>').join('')
+        : '<div class="pt-empty-hint">Ничего не найдено</div>';
+    };
+    $('ptGsIn').oninput = e => run(e.target.value);
+    setTimeout(() => $('ptGsIn').focus(), 60);
+  }
+
+  /* ============ 141-150: ЗАМЕТКИ И ЗАДАЧИ ============ */
+  const Notes = {
+    open() {
+      const draw = () => {
+        const list = P.Notes.all();
+        const b = modal('📝 Заметки (' + list.length + ')',
+          '<textarea class="pt-inp pt-ta" id="ptNoteIn" placeholder="Новая заметка..."></textarea>' +
+          '<button class="pt-btn41" id="ptNoteAdd">➕ Добавить</button>' +
+          '<div class="pt-list41">' + list.map((n, i) =>
+            '<div class="pt-li"><b>' + esc(n.t) + '</b><i>' + new Date(n.at).toLocaleString('ru-RU') + '</i>' +
+            '<span class="pt-li-x" data-d="' + i + '">🗑️</span>' +
+            '<span class="pt-li-x" data-s="' + i + '">📤</span></div>').join('') + '</div>');
+        $('ptNoteAdd').onclick = () => {
+          const v = $('ptNoteIn').value.trim(); if (!v) return;
+          list.unshift({ t: v, at: Date.now() }); P.Notes.set(list); draw();
+        };
+        b.querySelectorAll('[data-d]').forEach(x => x.onclick = () => { list.splice(+x.dataset.d, 1); P.Notes.set(list); draw(); });
+        b.querySelectorAll('[data-s]').forEach(x => x.onclick = () => { insert(list[+x.dataset.s].t); closeModal(); });
+      };
+      draw();
+    }
+  };
+  const Tasks = {
+    open() {
+      const draw = () => {
+        const list = P.Tasks.all();
+        const done = list.filter(t => t.done).length;
+        const b = modal('☑️ Задачи (' + done + '/' + list.length + ')',
+          '<input class="pt-inp" id="ptTaskIn" placeholder="Новая задача..."><button class="pt-btn41" id="ptTaskAdd">➕ Добавить</button>' +
+          '<div class="pt-list41">' + list.map((t, i) =>
+            '<div class="pt-li task' + (t.done ? ' done' : '') + '"><span class="ck" data-c="' + i + '">' + (t.done ? '☑️' : '⬜') + '</span>' +
+            '<b>' + esc(t.t) + '</b><span class="pt-li-x" data-d="' + i + '">🗑️</span></div>').join('') + '</div>');
+        const add = () => { const v = $('ptTaskIn').value.trim(); if (!v) return; list.push({ t: v, done: false }); P.Tasks.set(list); draw(); };
+        $('ptTaskAdd').onclick = add;
+        $('ptTaskIn').onkeydown = e => { if (e.key === 'Enter') add(); };
+        b.querySelectorAll('[data-c]').forEach(x => x.onclick = () => { const i = +x.dataset.c; list[i].done = !list[i].done; P.Tasks.set(list); draw(); });
+        b.querySelectorAll('[data-d]').forEach(x => x.onclick = () => { list.splice(+x.dataset.d, 1); P.Tasks.set(list); draw(); });
+      };
+      draw();
+    }
+  };
+  P.NotesUI = Notes; P.TasksUI = Tasks;
+  P.globalSearch = globalSearch; P.gallery = gallery; P.hotkeys = hotkeys;
+  P.calc = calc; P.templates = templates; P.chatInfo = chatInfo;
+  P.starred = starred; P.linksList = linksList; P.filesList = filesList;
+  P.backup = backup; P.restore = restore; P.askNotif = askNotif;
+  P.ACTIONS = ACTIONS;
+})();
+
+(() => {
+  if (!window.__PT41 || window.__PT41Wire) return;
+  window.__PT41Wire = true;
+  const P = window.__PT41;
+  const { $, qs, me, esc, msgs, flash, plain, modal, closeModal, redraw, playSound } = P;
+  let cfg = P.cfg;
+
+  /* ============ 151-160: ОТМЕНА ОТПРАВКИ + ПЕРЕХВАТ ВВОДА ============ */
+  let undoTimer = null, undoPayload = null;
+
+  function hookSend() {
+    const V = window.PTV38 && PTV38.Send;
+    if (!V || V.__v41) return;
+    V.__v41 = true;
+    const orig = V.run.bind(V);
+
+    V.run = function () {
+      const i = $('msgTextInput');
+      if (!i) return orig();
+      let text = i.value;
+
+      /* команды /shrug, /roll и т.д. */
+      const cmd = P.runCommand(text);
+      if (cmd !== null) {
+        if (cmd === '') { i.value = ''; P.counter(); return Promise.resolve(); }
+        i.value = cmd;
+        text = cmd;
+      }
+      /* смайлики :) -> 🙂 */
+      const conv = P.applyEmoticons(text);
+      if (conv !== text) { i.value = conv; text = conv; }
+
+      if (text.trim()) { P.Hist.push(text.trim()); P.Draft.clear(); }
+
+      /* отмена отправки */
+      if (cfg.undoSend && text.trim()) {
+        const saved = text;
+        i.value = '';
+        P.counter();
+        showUndo(saved, () => { i.value = saved; orig(); });
+        return Promise.resolve();
+      }
+      const r = orig();
+      playSound('out');
+      return r;
+    };
+  }
+
+  function showUndo(text, send) {
+    clearTimeout(undoTimer);
+    let bar = $('ptUndo');
+    if (!bar) {
+      bar = document.createElement('div'); bar.id = 'ptUndo'; bar.className = 'pt-undo';
+      document.body.appendChild(bar);
+    }
+    bar.innerHTML = '<span class="tx"></span><button id="ptUndoBtn">Отменить</button><span class="bar"><i></i></span>';
+    bar.querySelector('.tx').textContent = '📨 ' + text.slice(0, 40) + (text.length > 40 ? '…' : '');
+    bar.classList.add('on');
+    const i = bar.querySelector('.bar i');
+    i.style.transition = 'width ' + cfg.undoMs + 'ms linear';
+    setTimeout(() => { i.style.width = '0%'; }, 20);
+    undoPayload = { text, send };
+    $('ptUndoBtn').onclick = () => {
+      clearTimeout(undoTimer);
+      bar.classList.remove('on');
+      const inp = $('msgTextInput');
+      if (inp) { inp.value = text; inp.focus(); P.counter(); }
+      undoPayload = null;
+      flash('↩️ Отправка отменена');
+    };
+    undoTimer = setTimeout(() => {
+      bar.classList.remove('on');
+      if (undoPayload) { undoPayload.send(); undoPayload = null; playSound('out'); }
+    }, cfg.undoMs);
+  }
+
+  /* ============ 161-172: ПОЛЕ ВВОДА ============ */
+  function bindInput() {
+    const i = $('msgTextInput');
+    if (!i || i.dataset.v41 === '1') return;
+    i.dataset.v41 = '1';
+    i.spellcheck = !!cfg.spellcheck;
+
+    i.addEventListener('input', () => { P.counter(); P.Draft.save(); });
+
+    i.addEventListener('keydown', e => {
+      /* Ctrl+↑/↓ — история */
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault(); P.Hist.step(e.key === 'ArrowUp' ? 1 : -1); return;
+      }
+      /* ↑ в пустом поле — правка последнего своего */
+      if (e.key === 'ArrowUp' && !i.value.trim()) {
+        const mine = msgs().filter(m => m.senderId === me().id);
+        const last = mine[mine.length - 1];
+        if (last && !String(last.text || '').startsWith('__')) {
+          e.preventDefault(); i.value = last.text; P.counter();
+          flash('✏️ Правка последнего — измени и отправь');
+        }
+        return;
+      }
+      /* Enter / Ctrl+Enter */
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (!cfg.sendOnEnter && !(e.ctrlKey || e.metaKey)) return;
+      }
+      /* Tab — автодополнение шаблона */
+      if (e.key === 'Tab' && i.value.startsWith('!')) {
+        e.preventDefault();
+        const q = i.value.slice(1).toLowerCase();
+        const t = P.TPL().find(x => x.k.toLowerCase().startsWith(q));
+        if (t) { i.value = t.v; P.counter(); }
+      }
+    });
+  }
+
+  /* ============ 173-185: ПАНЕЛЬ БЫСТРЫХ ДЕЙСТВИЙ ============ */
+  function quickBar() {
+    const bar = qs('.chat-input-bar-container');
+    if (!bar || !bar.parentNode) return;
+    let q = $('ptQuick');
+    if (!cfg.quickBar) { if (q) q.remove(); return; }
+    if (q) return;
+    q = document.createElement('div');
+    q.id = 'ptQuick'; q.className = 'pt-quick';
+    const items = [
+      ['⌘', 'Команды (Ctrl+K)', () => P.Palette.open()],
+      ['⚙️', 'Настройки', () => P.Settings.open()],
+      ['🖼️', 'Галерея', () => P.gallery()],
+      ['📋', 'Шаблоны', () => P.templates()],
+      ['📝', 'Заметки', () => P.NotesUI.open()],
+      ['☑️', 'Задачи', () => P.TasksUI.open()],
+      ['🧮', 'Калькулятор', () => P.calc()],
+      ['📊', 'Статистика', () => P.showStats()],
+      ['💾', 'Экспорт', () => P.exportChat('txt')],
+      ['🎨', 'Тема', () => P.cycleTheme()]
+    ];
+    items.forEach(it => {
+      const b = document.createElement('button');
+      b.className = 'pt-q'; b.textContent = it[0]; b.title = it[1];
+      b.onclick = e => { e.preventDefault(); it[2](); };
+      q.appendChild(b);
+    });
+    bar.parentNode.insertBefore(q, bar);
+  }
+
+  /* ============ 186-195: ГОРЯЧИЕ КЛАВИШИ ============ */
+  function keys() {
+    if (window.__v41keys) return;
+    window.__v41keys = true;
+    document.addEventListener('keydown', e => {
+      const k = (e.key || '').toLowerCase();
+      const ctrl = e.ctrlKey || e.metaKey;
+      const inField = /INPUT|TEXTAREA/.test(e.target.tagName || '');
+      if (ctrl && k === 'k') { e.preventDefault(); P.Palette.open(); return; }
+      if (ctrl && e.shiftKey && k === 'f') { e.preventDefault(); P.globalSearch(); return; }
+      if (ctrl && k === ',') { e.preventDefault(); P.Settings.open(); return; }
+      if (ctrl && k === 'e') { e.preventDefault(); P.exportChat('txt'); return; }
+      if (ctrl && k === 'l') { e.preventDefault(); P.lockScreen(); return; }
+      if (ctrl && e.shiftKey && k === 't') { e.preventDefault(); P.cycleTheme(); return; }
+      if (ctrl && (k === '=' || k === '+')) { e.preventDefault(); P.fontStep(1); return; }
+      if (ctrl && k === '-') { e.preventDefault(); P.fontStep(-1); return; }
+      if (k === 'escape') { closeModal(); if (P.isSel()) P.toggleSelect(false); return; }
+      if (!inField && k === '?' && e.shiftKey) { e.preventDefault(); P.hotkeys(); }
+    });
+  }
+
+  /* ============ 196-205: ОФОРМЛЕНИЕ СООБЩЕНИЙ ============ */
+  function decorate41() {
+    if (typeof AppState === 'undefined' || !AppState.activeChat || !me()) return;
+    const vp = $('messagesViewport'); if (!vp) return;
+    const list = msgs(), byId = {};
+    list.forEach(m => byId[m.id] = m);
+    const rows = [...vp.querySelectorAll('.msg-row-container')];
+
+    rows.forEach((row, idx) => {
+      const m = byId[row.dataset.mid]; if (!m) return;
+      const bub = row.querySelector('.msg-bubble-card');
+
+      /* крупные эмодзи */
+      if (cfg.bigEmoji && bub && !row.dataset.big) {
+        row.dataset.big = '1';
+        const t = (m.text || '').trim();
+        if (t && t.length <= 8 && /^[\p{Extended_Pictographic}\u200d\ufe0f\s]+$/u.test(t)) bub.classList.add('pt-bigemo');
+      }
+      /* группировка подряд идущих */
+      if (cfg.group) {
+        const prev = rows[idx - 1] ? byId[rows[idx - 1].dataset.mid] : null;
+        if (prev && prev.senderId === m.senderId && Math.abs(m.time - prev.time) < 120000) row.classList.add('pt-grouped');
+        else row.classList.remove('pt-grouped');
+      }
+      /* полная дата при наведении */
+      if (cfg.timeOnHover && bub && !bub.title) bub.title = new Date(m.time).toLocaleString('ru-RU');
+      /* секунды */
+      if (cfg.showSeconds) {
+        const t = bub && bub.querySelector('.msg-meta-details > div');
+        if (t && !t.dataset.sec) { t.dataset.sec = '1'; t.textContent = new Date(m.time).toLocaleTimeString('ru-RU'); }
+      }
+      /* режим выделения */
+      if (P.isSel()) {
+        if (!row.querySelector('.pt-selck')) {
+          const c = document.createElement('span');
+          c.className = 'pt-selck';
+          c.textContent = P.selected.has(m.id) ? '☑️' : '⬜';
+          c.onclick = ev => {
+            ev.stopPropagation();
+            P.selected.has(m.id) ? P.selected.delete(m.id) : P.selected.add(m.id);
+            P.selBar(); decorate41();
+          };
+          row.insertBefore(c, row.firstChild);
+        } else {
+          row.querySelector('.pt-selck').textContent = P.selected.has(m.id) ? '☑️' : '⬜';
+        }
+      } else {
+        const c = row.querySelector('.pt-selck'); if (c) c.remove();
+      }
+    });
+  }
+  P.decorate41 = decorate41;
+
+  function hookRender() {
+    const f = window.PTFiles;
+    if (!f || f.__v41) return;
+    f.__v41 = true;
+    const orig = f.renderMessages;
+    f.renderMessages = function () { orig.apply(this, arguments); try { decorate41(); } catch (e) {} };
+  }
+
+  /* ============ 206-215: УВЕДОМЛЕНИЯ О НОВЫХ ============ */
+  let lastCount = {}, unreadTotal = 0;
+  function watchIncoming() {
+    if (typeof AppState === 'undefined' || !me()) return;
+    Object.keys(AppState.messages || {}).forEach(k => {
+      const arr = AppState.messages[k] || [];
+      const prev = lastCount[k];
+      lastCount[k] = arr.length;
+      if (prev === undefined || arr.length <= prev) return;
+      const fresh = arr.slice(prev).filter(m => m.senderId !== me().id);
+      if (!fresh.length) return;
+      const active = AppState.activeChat && k === P.chatKey(AppState.activeChat.id);
+      playSound('in');
+      if (!active || document.hidden) {
+        unreadTotal += fresh.length;
+        title();
+        const other = k.split('__').find(x => x !== me().id);
+        const u = (AppState.users || []).find(x => x.id === other);
+        P.notify((u ? u.name : 'Новое сообщение'), plain(fresh[0]).slice(0, 90));
+      }
+    });
+  }
+  function title() {
+    const base = 'PlayTalk';
+    document.title = unreadTotal > 0 ? '(' + unreadTotal + ') ' + base : base;
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { unreadTotal = 0; title(); } });
+
+  /* ============ 216-220: КНОПКИ В ШАПКЕ ============ */
+  function headerBtns() {
+    const acts = qs('.chat-header-actions');
+    if (!acts) return;
+    if (!$('ptCmdBtn')) {
+      const b = document.createElement('button');
+      b.id = 'ptCmdBtn'; b.className = 'header-icon-btn'; b.title = 'Команды (Ctrl+K)'; b.textContent = '⌘';
+      b.onclick = () => P.Palette.open();
+      acts.appendChild(b);
+    }
+    if (!$('ptGearBtn')) {
+      const b = document.createElement('button');
+      b.id = 'ptGearBtn'; b.className = 'header-icon-btn'; b.title = 'Настройки (Ctrl+,)'; b.textContent = '⚙️';
+      b.onclick = () => P.Settings.open();
+      acts.appendChild(b);
+    }
+  }
+
+  /* ============ ЗАПУСК ============ */
+  function tick() {
+    hookSend(); hookRender(); bindInput(); quickBar(); headerBtns();
+    P.counter(); P.Draft.load(); P.checkReminders(); watchIncoming();
+  }
+
+  function init() {
+    P.applyAll();
+    keys();
+    tick();
+    setInterval(tick, 2000);
+    setInterval(() => P.checkReminders(), 15000);
+    P.log('готово: 100+ функций подключено (Ctrl+K — список)');
+    setTimeout(() => {
+      if (!P.S.get('welcomed', false)) {
+        P.S.set('welcomed', true);
+        flash('✨ Нажми Ctrl+K — там 40+ команд');
+      }
+    }, 2500);
+  }
+
+  const boot = () => {
+    if (typeof AppState === 'undefined' || typeof MessagingEngine === 'undefined' || !AppState.currentUser) { setTimeout(boot, 400); return; }
+    init();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 3000));
+  else setTimeout(boot, 3000);
+
+  window.PT41 = P;
+})();
+
+</script>
+
+<!-- ===== PLAYTALK v42: звуки, поиск людей, дашборд ===== -->
+<style id="pt-v42-style">
+/* ===== PLAYTALK v42 ===== */
+.pt-find-sec { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--text-muted); margin: 14px 0 8px; }
+.pt-find-hint { font-size: 12px; color: var(--text-muted); line-height: 1.55; margin: -4px 0 10px; }
+.pt-find-i { position: relative; display: flex; align-items: center; gap: 11px; padding: 10px 12px; margin-bottom: 6px;
+  border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); cursor: pointer; transition: .13s; }
+.pt-find-i:hover { background: rgba(82,136,193,.2); transform: translateX(2px); }
+.pt-find-av { position: relative; width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: #fff; }
+.pt-find-av .dot { position: absolute; right: 0; bottom: 1px; width: 12px; height: 12px; border-radius: 50%;
+  background: #4ade80; border: 2px solid #17212b; }
+.pt-find-b { flex: 1; min-width: 0; }
+.pt-find-b .nm { font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-find-b .tg { font-size: 11.5px; color: var(--tg-accent); margin-top: 1px; }
+.pt-find-b .st { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.tagk { font-size: 9.5px; padding: 2px 6px; border-radius: 99px; background: rgba(74,222,128,.16);
+  color: #86efac; font-weight: 700; vertical-align: middle; }
+.pt-find-c { width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.06); color: #fff; cursor: pointer; flex-shrink: 0; }
+.pt-find-c:hover { background: rgba(255,255,255,.15); }
+#ptFindExtra { margin-top: 10px; padding: 10px 6px 6px; border-top: 1px dashed rgba(255,255,255,.12); }
+
+/* упоминания */
+.pt-ment { position: fixed; z-index: 100040; padding: 6px; border-radius: 13px; background: #1c2733;
+  border: 1px solid rgba(255,255,255,.12); box-shadow: 0 16px 40px rgba(0,0,0,.6); max-height: 220px; overflow-y: auto; }
+.pt-ment-i { display: flex; flex-direction: column; padding: 8px 11px; border-radius: 9px; cursor: pointer; }
+.pt-ment-i.on, .pt-ment-i:hover { background: rgba(82,136,193,.28); }
+.pt-ment-i b { font-size: 13px; color: #fff; }
+.pt-ment-i span { font-size: 11px; color: var(--tg-accent); }
+
+/* наборы звуков */
+.pt-packs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.pt-pack { display: flex; flex-direction: column; gap: 3px; padding: 12px; border-radius: 13px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); color: #fff; text-align: left; }
+.pt-pack.on { background: rgba(82,136,193,.28); border-color: var(--tg-accent); }
+.pt-pack b { font-size: 13px; } .pt-pack i { font-size: 11px; color: var(--text-muted); font-style: normal; }
+.pt-evs { display: flex; flex-direction: column; }
+.pt-ev { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.pt-ev span { flex: 1; font-size: 13px; color: #fff; }
+.pt-ev .tst { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.07); color: #fff; cursor: pointer; font-size: 11px; }
+.pt-ev .tst:hover { background: var(--tg-accent); }
+.pt-ev input { width: 18px; height: 18px; accent-color: var(--tg-accent); cursor: pointer; }
+
+/* дашборд */
+.pt-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(102px, 1fr)); gap: 9px; }
+.pt-card42 { padding: 13px 10px; border-radius: 14px; text-align: center;
+  background: linear-gradient(150deg, rgba(82,136,193,.16), rgba(139,92,246,.1)); border: 1px solid rgba(255,255,255,.07); }
+.pt-card42 .i { font-size: 19px; } .pt-card42 .v { font-size: 19px; font-weight: 800; color: #fff; margin: 3px 0; }
+.pt-card42 .l { font-size: 10.5px; color: var(--text-muted); }
+.pt-bars { display: flex; align-items: flex-end; gap: 2px; height: 92px; padding: 8px 0 16px; position: relative; }
+.pt-bar { flex: 1; height: 100%; display: flex; align-items: flex-end; position: relative; }
+.pt-bar i { display: block; width: 100%; min-height: 2px; border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--tg-accent), rgba(82,136,193,.32)); }
+.pt-bar u { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); font-size: 9px;
+  color: var(--text-muted); text-decoration: none; }
+.pt-prow { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 12.5px; }
+.pt-prow span { width: 92px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-prow b { width: 40px; text-align: right; color: var(--tg-accent); }
+.pt-pbar { flex: 1; height: 7px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.pt-pbar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #649bd3, #a855f7); }
+
+/* профиль */
+.pt-peer { text-align: center; padding: 6px 0 14px; }
+.pt-peer-av { width: 86px; height: 86px; margin: 0 auto 11px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 33px; font-weight: 800; color: #fff; }
+.pt-peer-n { font-size: 19px; font-weight: 800; color: #fff; }
+.pt-peer-t { font-size: 13px; color: var(--tg-accent); margin-top: 2px; }
+.pt-peer-s { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+/* конфетти */
+.pt-conf { position: fixed; inset: 0; z-index: 100050; pointer-events: none; overflow: hidden; }
+.pt-conf i { position: absolute; top: -12px; width: 9px; height: 9px; border-radius: 2px;
+  animation: ptFall linear forwards; }
+@keyframes ptFall { to { transform: translateY(104vh) rotate(680deg); opacity: .15; } }
+
+@media (max-width: 768px) {
+  .pt-cards { grid-template-columns: repeat(2, 1fr); }
+  .pt-packs { grid-template-columns: 1fr; }
+  .pt-prow span { width: 68px; }
+}
+
+</style>
+
+<script id="pt-v42-script">
+(() => {
+  if (window.__playTalkV42Loaded) return;
+  window.__playTalkV42Loaded = true;
+
+  const $ = id => document.getElementById(id);
+  const qs = s => document.querySelector(s);
+  const me = () => (typeof AppState !== 'undefined' && AppState.currentUser) || null;
+  const esc = s => { const d = document.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; };
+  const log = (...a) => console.log('%c[PlayTalk v42]', 'color:#06b6d4;font-weight:700', ...a);
+  const P41 = () => window.PT41 || null;
+  const chatKey = id => [me().id, id].sort().join('__');
+  const msgsOf = id => (AppState.messages[chatKey(id)] || []);
+  const S = {
+    get(k, d) { try { const v = localStorage.getItem('pt42_' + k + '_' + (me() ? me().id : 'g')); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('pt42_' + k + '_' + (me() ? me().id : 'g'), JSON.stringify(v)); } catch (e) {} }
+  };
+  function flash(t) {
+    let el = $('ptCopyToast');
+    if (!el) { el = document.createElement('div'); el.id = 'ptCopyToast'; el.className = 'pt-toast-copy'; document.body.appendChild(el); }
+    el.textContent = t; el.classList.add('on');
+    clearTimeout(el._h); el._h = setTimeout(() => el.classList.remove('on'), 1900);
+  }
+  const plain = m => { try { return window.PT40 && PT40.plainText ? PT40.plainText(m) : (m.text || ''); } catch (e) { return m.text || ''; } };
+
+  /* =====================================================
+     ЗВУКОВОЙ ДВИЖОК — разные звуки на разные события
+     ===================================================== */
+  const PACKS = {
+    classic: { name: '🔔 Классика', d: 'Мягкие тона' },
+    crystal: { name: '💎 Кристалл', d: 'Чистые высокие' },
+    retro:   { name: '🕹️ Ретро', d: '8-бит, как в играх' },
+    nature:  { name: '🌿 Природа', d: 'Тёплые деревянные' },
+    minimal: { name: '⚪ Минимал', d: 'Едва слышные' },
+    cosmic:  { name: '🚀 Космос', d: 'Объёмные с эхом' }
+  };
+  /* тип события -> [частоты], длительность, форма волны */
+  const EVENTS = {
+    in:       { t: 'Входящее сообщение',  base: [660, 880] },
+    out:      { t: 'Отправка',            base: [880] },
+    mention:  { t: 'Упоминание вас',      base: [784, 988, 1175] },
+    call:     { t: 'Входящий звонок',     base: [660, 550], loop: true },
+    file:     { t: 'Файл получен',        base: [520, 700] },
+    reaction: { t: 'Реакция на сообщение',base: [1046] },
+    join:     { t: 'Контакт в сети',      base: [523, 784] },
+    err:      { t: 'Ошибка',              base: [220, 180] },
+    sent:     { t: 'Доставлено',          base: [1200] },
+    typing:   { t: 'Собеседник печатает', base: [400] }
+  };
+  const PACK_MOD = {
+    classic: { wave: 'sine',     dur: 0.20, mul: 1,    gap: 0.10, gain: 1 },
+    crystal: { wave: 'triangle', dur: 0.26, mul: 1.34, gap: 0.08, gain: 0.95 },
+    retro:   { wave: 'square',   dur: 0.11, mul: 0.75, gap: 0.07, gain: 0.55 },
+    nature:  { wave: 'sine',     dur: 0.34, mul: 0.62, gap: 0.13, gain: 1.05 },
+    minimal: { wave: 'sine',     dur: 0.13, mul: 1,    gap: 0.06, gain: 0.45 },
+    cosmic:  { wave: 'sawtooth', dur: 0.42, mul: 0.85, gap: 0.15, gain: 0.5 }
+  };
+
+  const Sound = {
+    ctx: null, ringTimer: null,
+    cfg() {
+      const c = (P41() && P41().cfg) || {};
+      return {
+        pack: S.get('pack', 'classic'),
+        vol: typeof c.volume === 'number' ? c.volume : 0.35,
+        per: S.get('perEvent', {}),
+        muted: S.get('muted', false),
+        quiet: S.get('quiet', { on: false, from: 23, to: 8 })
+      };
+    },
+    setPack(p) { S.set('pack', p); this.play('in'); },
+    setEvent(ev, on) { const p = S.get('perEvent', {}); p[ev] = on; S.set('perEvent', p); },
+    isQuiet() {
+      const q = this.cfg().quiet;
+      if (!q || !q.on) return false;
+      const h = new Date().getHours();
+      return q.from > q.to ? (h >= q.from || h < q.to) : (h >= q.from && h < q.to);
+    },
+    play(ev, force) {
+      const c = this.cfg();
+      if (!force && (c.muted || this.isQuiet())) return;
+      if (!force && c.per[ev] === false) return;
+      const E = EVENTS[ev]; if (!E) return;
+      const M = PACK_MOD[c.pack] || PACK_MOD.classic;
+      try {
+        this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const ctx = this.ctx, vol = Math.max(0.001, c.vol * M.gain);
+        E.base.forEach((f, i) => {
+          const t0 = ctx.currentTime + i * M.gap;
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = M.wave; o.frequency.setValueAtTime(f * M.mul, t0);
+          if (c.pack === 'cosmic') o.frequency.exponentialRampToValueAtTime(f * M.mul * 0.72, t0 + M.dur);
+          if (c.pack === 'retro') o.frequency.setValueAtTime(f * M.mul * 1.5, t0 + M.dur * 0.5);
+          g.gain.setValueAtTime(0.0001, t0);
+          g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + M.dur);
+          o.connect(g);
+          if (c.pack === 'cosmic' && ctx.createDelay) {
+            const dl = ctx.createDelay(), fb = ctx.createGain();
+            dl.delayTime.value = 0.13; fb.gain.value = 0.28;
+            g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(ctx.destination);
+          }
+          g.connect(ctx.destination);
+          o.start(t0); o.stop(t0 + M.dur + 0.04);
+        });
+        const vib = (P41() && P41().cfg.vibrate);
+        if (vib && navigator.vibrate) navigator.vibrate(ev === 'call' ? [80, 60, 80] : ev === 'mention' ? [50, 40, 50] : 35);
+      } catch (e) {}
+    },
+    ring(on) {
+      clearInterval(this.ringTimer); this.ringTimer = null;
+      if (on) { this.play('call'); this.ringTimer = setInterval(() => this.play('call'), 1600); }
+    },
+    test(ev) { this.play(ev, true); }
+  };
+
+  /* =====================================================
+     ГЛОБАЛЬНЫЙ ПОИСК ПО ЮЗЕРНЕЙМАМ (все пользователи)
+     ===================================================== */
+  const Find = {
+    score(u, q) {
+      const n = (u.name || '').toLowerCase();
+      const t = (u.tag || '').toLowerCase().replace('@', '');
+      const un = (u.username || '').toLowerCase();
+      const id = (u.id || '').toLowerCase();
+      if (t === q || un === q) return 100;
+      if (n === q) return 95;
+      if (t.startsWith(q) || un.startsWith(q)) return 85;
+      if (n.startsWith(q)) return 80;
+      if (t.includes(q) || un.includes(q)) return 60;
+      if (n.includes(q)) return 55;
+      if (id.startsWith(q)) return 50;
+      if (id.includes(q)) return 30;
+      return 0;
+    },
+    search(q) {
+      const ql = String(q || '').toLowerCase().trim().replace(/^@/, '');
+      if (!ql) return [];
+      return (AppState.users || [])
+        .filter(u => u && u.id !== (me() || {}).id)
+        .map(u => ({ u, s: this.score(u, ql) }))
+        .filter(x => x.s > 0)
+        .sort((a, b) => b.s - a.s || (a.u.name || '').localeCompare(b.u.name || ''))
+        .map(x => x.u);
+    },
+    isContact(id) {
+      try { return window.ContactsOnlyEngine ? ContactsOnlyEngine.hasContact(id) : true; } catch (e) { return true; }
+    },
+    online(u) {
+      try { return window.V35 && V35.isOnline ? V35.isOnline(u.last_seen) : false; } catch (e) { return false; }
+    },
+    open(prefill) {
+      const html =
+        '<input class="pt-inp" id="ptFindIn" placeholder="Имя, @юзернейм или ID..." autocomplete="off">' +
+        '<div class="pt-find-hint">Ищет среди <b>всех</b> зарегистрированных, даже если человек не в контактах</div>' +
+        '<div class="pt-list41" id="ptFindL"></div>';
+      const b = (P41() && P41().modal) ? P41().modal('🔎 Поиск людей', html, true) : null;
+      if (!b) return;
+      const draw = q => {
+        const res = this.search(q);
+        const L = $('ptFindL');
+        if (!q || !q.trim()) {
+          const rec = S.get('recent', []).map(id => (AppState.users || []).find(u => u.id === id)).filter(Boolean);
+          L.innerHTML = rec.length
+            ? '<div class="pt-find-sec">Недавние</div>' + rec.map(u => this.card(u)).join('')
+            : '<div class="pt-empty-hint">Начни печатать имя или @юзернейм.<br>Всего зарегистрировано: <b>' + ((AppState.users || []).length) + '</b></div>';
+        } else if (!res.length) {
+          L.innerHTML = '<div class="pt-empty-hint">Никого не найдено по запросу «' + esc(q) + '»<br><br>Проверь написание. Юзернейм ищется и без «@».</div>';
+        } else {
+          L.innerHTML = '<div class="pt-find-sec">Найдено: ' + res.length + '</div>' + res.map(u => this.card(u)).join('');
+        }
+        L.querySelectorAll('[data-uid]').forEach(el => {
+          el.onclick = ev => {
+            const id = el.dataset.uid;
+            const u = (AppState.users || []).find(x => x.id === id);
+            if (!u) return;
+            if (ev.target.dataset.act === 'copy') { ev.stopPropagation(); try { PT40.copyText(u.tag || u.id); } catch (e) {} return; }
+            this.remember(id);
+            try { P41().closeModal(); } catch (e) {}
+            try {
+              if (!this.isContact(id) && window.ContactsOnlyEngine) ContactsOnlyEngine.upsertContact(u);
+              AppEngine.openChat(u);
+            } catch (e) {}
+          };
+        });
+      };
+      const inp = $('ptFindIn');
+      inp.oninput = e => draw(e.target.value);
+      inp.onkeydown = e => {
+        if (e.key === 'Enter') { const f = $('ptFindL').querySelector('[data-uid]'); if (f) f.click(); }
+        if (e.key === 'Escape') { try { P41().closeModal(); } catch (er) {} }
+      };
+      if (prefill) inp.value = prefill;
+      draw(prefill || '');
+      setTimeout(() => inp.focus(), 60);
+    },
+    card(u) {
+      const av = u.avatar ? 'background-image:url(' + esc(u.avatar) + ');background-size:cover'
+        : 'background:' + esc(u.color || 'linear-gradient(135deg,#649bd3,#2b5278)');
+      const on = this.online(u);
+      const known = this.isContact(u.id);
+      const n = msgsOf(u.id).length;
+      return '<div class="pt-find-i" data-uid="' + esc(u.id) + '">' +
+        '<div class="pt-find-av" style="' + av + '">' + (u.avatar ? '' : esc((u.name || '?')[0].toUpperCase())) +
+        (on ? '<i class="dot"></i>' : '') + '</div>' +
+        '<div class="pt-find-b"><div class="nm">' + esc(u.name || 'Без имени') +
+        (known ? ' <span class="tagk">в контактах</span>' : '') + '</div>' +
+        '<div class="tg">' + esc(u.tag || '@' + (u.username || '')) + ' · ID ' + esc((u.id || '').slice(0, 8)) + '</div>' +
+        '<div class="st">' + (on ? '🟢 в сети' : '⚪ не в сети') + (n ? ' · ' + n + ' сообщ.' : '') + '</div></div>' +
+        '<button class="pt-find-c" data-act="copy" title="Копировать тег">📋</button></div>';
+    },
+    remember(id) {
+      const r = S.get('recent', []).filter(x => x !== id);
+      r.unshift(id); S.set('recent', r.slice(0, 8));
+    },
+    /* поиск в сайдбаре теперь показывает и НЕ-контактов */
+    patchSidebar() {
+      const inp = $('searchInput');
+      if (!inp || inp.dataset.v42 === '1') return;
+      inp.dataset.v42 = '1';
+      inp.placeholder = 'Поиск: имя, @юзернейм, ID';
+      inp.removeAttribute('oninput');
+      inp.addEventListener('input', () => { try { AppEngine.renderChatList(); } catch (e) {} setTimeout(() => this.extra(inp.value), 30); });
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter' && inp.value.trim()) this.open(inp.value.trim()); });
+    },
+    extra(q) {
+      const list = $('chatsScrollList');
+      const old = $('ptFindExtra'); if (old) old.remove();
+      const ql = String(q || '').trim();
+      if (!list || ql.length < 2) return;
+      const found = this.search(ql).filter(u => !this.isContact(u.id));
+      if (!found.length) return;
+      const box = document.createElement('div');
+      box.id = 'ptFindExtra';
+      box.innerHTML = '<div class="pt-find-sec">Не в контактах — можно написать</div>' +
+        found.slice(0, 6).map(u => this.card(u)).join('') +
+        '<button class="pt-btn41" id="ptFindMore">🔎 Открыть полный поиск</button>';
+      list.appendChild(box);
+      box.querySelectorAll('[data-uid]').forEach(el => el.onclick = ev => {
+        const u = (AppState.users || []).find(x => x.id === el.dataset.uid);
+        if (!u) return;
+        if (ev.target.dataset.act === 'copy') { ev.stopPropagation(); try { PT40.copyText(u.tag || u.id); } catch (e) {} return; }
+        this.remember(u.id);
+        try { if (window.ContactsOnlyEngine) ContactsOnlyEngine.upsertContact(u); AppEngine.openChat(u); } catch (e) {}
+      });
+      const mb = $('ptFindMore'); if (mb) mb.onclick = () => this.open(ql);
+    }
+  };
+
+  /* =====================================================
+     УПОМИНАНИЯ @ (автодополнение)
+     ===================================================== */
+  const Mention = {
+    box: null, items: [], idx: 0,
+    close() { if (this.box) { this.box.remove(); this.box = null; } this.items = []; },
+    bind() {
+      const i = $('msgTextInput');
+      if (!i || i.dataset.v42m === '1') return;
+      i.dataset.v42m = '1';
+      i.addEventListener('input', () => this.check(i));
+      i.addEventListener('keydown', e => {
+        if (!this.box || !this.items.length) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); this.idx = (this.idx + 1) % this.items.length; this.hl(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); this.idx = (this.idx - 1 + this.items.length) % this.items.length; this.hl(); }
+        else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); this.pick(this.items[this.idx]); }
+        else if (e.key === 'Escape') this.close();
+      }, true);
+    },
+    check(i) {
+      const v = i.value, pos = i.selectionStart || v.length;
+      const m = v.slice(0, pos).match(/@([\wа-яА-ЯёЁ.]*)$/);
+      if (!m) return this.close();
+      const q = m[1].toLowerCase();
+      this.items = (AppState.users || []).filter(u => u.id !== (me() || {}).id)
+        .filter(u => !q || (u.tag || '').toLowerCase().includes(q) || (u.name || '').toLowerCase().includes(q))
+        .slice(0, 6);
+      if (!this.items.length) return this.close();
+      this.idx = 0; this.show(i);
+    },
+    show(i) {
+      if (!this.box) {
+        this.box = document.createElement('div');
+        this.box.className = 'pt-ment';
+        document.body.appendChild(this.box);
+      }
+      this.box.innerHTML = this.items.map((u, k) =>
+        '<div class="pt-ment-i' + (k === this.idx ? ' on' : '') + '" data-k="' + k + '">' +
+        '<b>' + esc(u.name || '') + '</b><span>' + esc(u.tag || '') + '</span></div>').join('');
+      this.box.querySelectorAll('.pt-ment-i').forEach(el => el.onclick = () => this.pick(this.items[+el.dataset.k]));
+      const r = i.getBoundingClientRect(), bh = this.box.offsetHeight || 160;
+      this.box.style.left = r.left + 'px';
+      this.box.style.top = Math.max(8, r.top - bh - 8) + 'px';
+      this.box.style.width = Math.min(320, r.width) + 'px';
+    },
+    hl() { if (!this.box) return; this.box.querySelectorAll('.pt-ment-i').forEach((e, k) => e.classList.toggle('on', k === this.idx)); },
+    pick(u) {
+      if (!u) return;
+      const i = $('msgTextInput'); if (!i) return;
+      const pos = i.selectionStart || i.value.length;
+      const before = i.value.slice(0, pos).replace(/@([\wа-яА-ЯёЁ.]*)$/, '');
+      const tag = (u.tag || ('@' + (u.username || ''))).replace(/^@?/, '@');
+      i.value = before + tag + ' ' + i.value.slice(pos);
+      i.focus();
+      const np = (before + tag + ' ').length;
+      try { i.setSelectionRange(np, np); } catch (e) {}
+      this.close();
+      try { P41().counter(); } catch (e) {}
+    }
+  };
+
+  window.__PT42 = { $, qs, me, esc, log, S, flash, plain, chatKey, msgsOf,
+    Sound, PACKS, EVENTS, Find, Mention, P41 };
+})();
+
+(() => {
+  if (!window.__PT42 || window.__PT42B) return;
+  window.__PT42B = true;
+  const Q = window.__PT42;
+  const { $, qs, me, esc, S, flash, plain, msgsOf, Sound, PACKS, EVENTS, Find, P41 } = Q;
+  const modal = (t, h, w) => P41() ? P41().modal(t, h, w) : null;
+  const close = () => { try { P41().closeModal(); } catch (e) {} };
+
+  /* =====================================================
+     1. ЗВУКОВЫЕ НАСТРОЙКИ
+     ===================================================== */
+  const SoundUI = {
+    open() {
+      const c = Sound.cfg();
+      const html =
+        '<div class="pt-find-sec">Набор звуков</div>' +
+        '<div class="pt-packs">' + Object.keys(PACKS).map(k =>
+          '<button class="pt-pack' + (c.pack === k ? ' on' : '') + '" data-p="' + k + '">' +
+          '<b>' + PACKS[k].name + '</b><i>' + PACKS[k].d + '</i></button>').join('') + '</div>' +
+        '<div class="pt-find-sec">Звук на каждое событие</div>' +
+        '<div class="pt-evs">' + Object.keys(EVENTS).map(k =>
+          '<div class="pt-ev"><span>' + esc(EVENTS[k].t) + '</span>' +
+          '<button class="tst" data-t="' + k + '">▶</button>' +
+          '<input type="checkbox" data-e="' + k + '"' + (c.per[k] !== false ? ' checked' : '') + '></div>').join('') + '</div>' +
+        '<div class="pt-find-sec">Режимы</div>' +
+        '<label class="pt-set"><span><b>🔕 Полная тишина</b><i>Отключить вообще все звуки</i></span>' +
+        '<input type="checkbox" id="ptMuted"' + (c.muted ? ' checked' : '') + '></label>' +
+        '<label class="pt-set"><span><b>🌙 Ночной режим</b><i>Тишина с ' + c.quiet.from + ':00 до ' + c.quiet.to + ':00</i></span>' +
+        '<input type="checkbox" id="ptQuiet"' + (c.quiet.on ? ' checked' : '') + '></label>' +
+        '<div class="pt-range"><span>С <b id="ptQF">' + c.quiet.from + '</b>:00</span>' +
+        '<input type="range" min="0" max="23" value="' + c.quiet.from + '" id="ptQFrom"></div>' +
+        '<div class="pt-range"><span>До <b id="ptQT">' + c.quiet.to + '</b>:00</span>' +
+        '<input type="range" min="0" max="23" value="' + c.quiet.to + '" id="ptQTo"></div>';
+      const b = modal('🔊 Звуки', html, true);
+      if (!b) return;
+      b.querySelectorAll('.pt-pack').forEach(x => x.onclick = () => {
+        b.querySelectorAll('.pt-pack').forEach(y => y.classList.remove('on'));
+        x.classList.add('on'); Sound.setPack(x.dataset.p);
+      });
+      b.querySelectorAll('.tst').forEach(x => x.onclick = () => Sound.test(x.dataset.t));
+      b.querySelectorAll('[data-e]').forEach(x => x.onchange = () => Sound.setEvent(x.dataset.e, x.checked));
+      $('ptMuted').onchange = e => { S.set('muted', e.target.checked); flash(e.target.checked ? '🔕 Звуки выключены' : '🔊 Звуки включены'); };
+      const upd = () => {
+        S.set('quiet', { on: $('ptQuiet').checked, from: +$('ptQFrom').value, to: +$('ptQTo').value });
+        $('ptQF').textContent = $('ptQFrom').value; $('ptQT').textContent = $('ptQTo').value;
+      };
+      ['ptQuiet', 'ptQFrom', 'ptQTo'].forEach(id => { const e = $(id); if (e) { e.onchange = upd; e.oninput = upd; } });
+    }
+  };
+
+  /* =====================================================
+     2. ДАШБОРД — сводка по всему мессенджеру
+     ===================================================== */
+  const Dash = {
+    open() {
+      const users = (AppState.users || []).filter(u => u.id !== me().id);
+      let total = 0, mine = 0, chars = 0, files = 0;
+      const perChat = [], hours = new Array(24).fill(0), byDay = {};
+      Object.keys(AppState.messages || {}).forEach(k => {
+        const arr = AppState.messages[k] || [];
+        if (!arr.length) return;
+        const other = k.split('__').find(x => x !== me().id);
+        const u = users.find(x => x.id === other);
+        total += arr.length;
+        arr.forEach(m => {
+          if (m.senderId === me().id) mine++;
+          const t = plain(m); chars += t.length;
+          if (String(m.text || '').startsWith('__attach')) files++;
+          const d = new Date(m.time);
+          hours[d.getHours()]++;
+          byDay[d.toDateString()] = (byDay[d.toDateString()] || 0) + 1;
+        });
+        perChat.push({ n: u ? (u.name || 'Чат') : 'Чат', c: arr.length, id: other });
+      });
+      perChat.sort((a, b) => b.c - a.c);
+      const peak = hours.indexOf(Math.max(...hours));
+      const days = Object.keys(byDay).length;
+      const maxH = Math.max(1, ...hours);
+      const online = users.filter(u => Find.online(u)).length;
+      const top = perChat.slice(0, 5);
+      const maxC = Math.max(1, ...top.map(t => t.c));
+
+      const html =
+        '<div class="pt-cards">' +
+          card('💬', total, 'сообщений') + card('📤', mine, 'ваших') +
+          card('👥', users.length, 'пользователей') + card('🟢', online, 'в сети') +
+          card('📎', files, 'вложений') + card('📅', days, 'дней') +
+          card('✍️', (chars / 1000).toFixed(1) + 'k', 'символов') + card('🕐', peak + ':00', 'пик активности') +
+        '</div>' +
+        '<div class="pt-find-sec">Активность по часам</div>' +
+        '<div class="pt-bars">' + hours.map((v, h) =>
+          '<div class="pt-bar" title="' + h + ':00 — ' + v + '"><i style="height:' + Math.round(v / maxH * 100) + '%"></i>' +
+          (h % 6 === 0 ? '<u>' + h + '</u>' : '') + '</div>').join('') + '</div>' +
+        '<div class="pt-find-sec">Самые активные чаты</div>' +
+        (top.length ? top.map(t =>
+          '<div class="pt-prow"><span>' + esc(t.n) + '</span>' +
+          '<div class="pt-pbar"><i style="width:' + Math.round(t.c / maxC * 100) + '%"></i></div>' +
+          '<b>' + t.c + '</b></div>').join('') : '<div class="pt-empty-hint">Пока нет переписок</div>');
+      modal('📊 Дашборд', html, true);
+      function card(i, v, l) { return '<div class="pt-card42"><div class="i">' + i + '</div><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'; }
+    }
+  };
+
+  /* =====================================================
+     3. ОТЛОЖЕННАЯ ОТПРАВКА
+     ===================================================== */
+  const Sched = {
+    all: () => S.get('sched', []),
+    set: a => S.set('sched', a),
+    add() {
+      if (!AppState.activeChat) return flash('Открой чат');
+      const i = $('msgTextInput');
+      const txt = (i && i.value.trim()) || prompt('Текст сообщения:') || '';
+      if (!txt.trim()) return flash('Пустое сообщение');
+      const m = prompt('Через сколько минут отправить?', '30');
+      const n = parseFloat(m);
+      if (!n || n <= 0) return;
+      const a = this.all();
+      a.push({ id: 'sc' + Date.now(), to: AppState.activeChat.id, toName: AppState.activeChat.name || '', text: txt, at: Date.now() + n * 60000 });
+      this.set(a);
+      if (i) { i.value = ''; try { P41().counter(); } catch (e) {} }
+      flash('⏰ Отправлю через ' + n + ' мин');
+    },
+    tick() {
+      const now = Date.now();
+      const due = this.all().filter(s => s.at <= now);
+      if (!due.length) return;
+      this.set(this.all().filter(s => s.at > now));
+      due.forEach(async s => {
+        try {
+          const c = window.PTV38 && PTV38.getClient();
+          if (!c) return;
+          await c.from('messages').insert({ sender_id: me().id, recipient_id: s.to, body: s.text });
+          Sound.play('out');
+          flash('📨 Отложенное отправлено: ' + s.toName);
+        } catch (e) {}
+      });
+    },
+    open() {
+      const draw = () => {
+        const a = this.all().sort((x, y) => x.at - y.at);
+        const b = modal('⏰ Отложенные (' + a.length + ')',
+          '<button class="pt-btn41" id="ptScAdd">➕ Запланировать текст из поля</button>' +
+          '<div class="pt-list41">' + (a.length ? a.map((s, k) =>
+            '<div class="pt-li"><b>' + esc(s.text.slice(0, 90)) + '</b>' +
+            '<i>→ ' + esc(s.toName) + ' · ' + new Date(s.at).toLocaleString('ru-RU') + '</i>' +
+            '<span class="pt-li-x" data-d="' + k + '">🗑️</span></div>').join('')
+            : '<div class="pt-empty-hint">Ничего не запланировано</div>') + '</div>');
+        if (!b) return;
+        $('ptScAdd').onclick = () => { close(); this.add(); };
+        b.querySelectorAll('[data-d]').forEach(x => x.onclick = () => { const l = a.slice(); l.splice(+x.dataset.d, 1); this.set(l); draw(); });
+      };
+      draw();
+    }
+  };
+
+  /* =====================================================
+     4. ПЕРЕВОДЧИК (офлайн-словарь, без внешних сервисов)
+     ===================================================== */
+  const TR = { 'привет': 'hello', 'пока': 'bye', 'спасибо': 'thanks', 'да': 'yes', 'нет': 'no',
+    'как дела': 'how are you', 'хорошо': 'good', 'плохо': 'bad', 'друг': 'friend', 'любовь': 'love',
+    'время': 'time', 'день': 'day', 'ночь': 'night', 'сегодня': 'today', 'завтра': 'tomorrow',
+    'вчера': 'yesterday', 'дом': 'home', 'работа': 'work', 'деньги': 'money', 'человек': 'person',
+    'вода': 'water', 'еда': 'food', 'помощь': 'help', 'вопрос': 'question', 'ответ': 'answer' };
+  function translate() {
+    const rev = {}; Object.keys(TR).forEach(k => rev[TR[k]] = k);
+    const b = modal('🌐 Переводчик',
+      '<textarea class="pt-inp pt-ta" id="ptTrIn" placeholder="Текст (русский или английский)"></textarea>' +
+      '<div class="pt-calc-out" id="ptTrOut" style="font-size:16px;text-align:left;min-height:52px">—</div>' +
+      '<button class="pt-btn41" id="ptTrGo">Перевести</button>' +
+      '<button class="pt-btn41" id="ptTrSend">Вставить в поле</button>' +
+      '<div class="pt-find-hint">Простой встроенный словарь на частые слова — работает без интернета и без внешних сервисов.</div>');
+    if (!b) return;
+    const go = () => {
+      const t = $('ptTrIn').value.toLowerCase();
+      if (!t.trim()) { $('ptTrOut').textContent = '—'; return; }
+      /* определяем направление: есть кириллица -> ru->en, иначе en->ru */
+      const ru = /[а-яё]/i.test(t);
+      const dict = ru ? TR : rev;
+      let out = t;
+      Object.keys(dict).sort((a, c) => c.length - a.length).forEach(k => {
+        out = out.replace(new RegExp('(^|[^\\p{L}])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^\\p{L}])', 'giu'),
+          (m, a, b) => a + dict[k] + b);
+      });
+      $('ptTrOut').textContent = out || '—';
+    };
+    $('ptTrGo').onclick = go;
+    $('ptTrIn').oninput = go;
+    $('ptTrSend').onclick = () => { try { P41().insert($('ptTrOut').textContent); } catch (e) {} close(); };
+  }
+
+  /* =====================================================
+     5. КАРТОЧКИ, ОПРОСЫ, КОСТЁР ИДЕЙ
+     ===================================================== */
+  function poll() {
+    const b = modal('📊 Опрос',
+      '<input class="pt-inp" id="ptPq" placeholder="Вопрос">' +
+      '<input class="pt-inp" id="ptPa" placeholder="Вариант 1">' +
+      '<input class="pt-inp" id="ptPb" placeholder="Вариант 2">' +
+      '<input class="pt-inp" id="ptPc" placeholder="Вариант 3 (необязательно)">' +
+      '<button class="pt-btn41" id="ptPgo">Вставить опрос</button>');
+    if (!b) return;
+    $('ptPgo').onclick = () => {
+      const q = $('ptPq').value.trim();
+      const o = [$('ptPa').value, $('ptPb').value, $('ptPc').value].map(x => x.trim()).filter(Boolean);
+      if (!q || o.length < 2) return flash('Нужен вопрос и минимум 2 варианта');
+      const txt = '📊 ОПРОС: ' + q + '\n' + o.map((x, i) => (i + 1) + '️⃣ ' + x).join('\n') + '\n\nОтветь номером';
+      try { P41().insert(txt); } catch (e) {}
+      close();
+    };
+  }
+
+  const Ideas = {
+    all: () => S.get('ideas', []),
+    open() {
+      const draw = () => {
+        const a = this.all();
+        const b = modal('💡 Копилка идей (' + a.length + ')',
+          '<input class="pt-inp" id="ptIdIn" placeholder="Записать идею...">' +
+          '<button class="pt-btn41" id="ptIdAdd">➕ Добавить</button>' +
+          '<div class="pt-list41">' + (a.length ? a.map((x, k) =>
+            '<div class="pt-li"><b>' + esc(x.t) + '</b><i>' + new Date(x.at).toLocaleDateString('ru-RU') + '</i>' +
+            '<span class="pt-li-x" data-d="' + k + '">🗑️</span>' +
+            '<span class="pt-li-x" data-s="' + k + '">📤</span></div>').join('')
+            : '<div class="pt-empty-hint">Пока пусто</div>') + '</div>');
+        if (!b) return;
+        const add = () => { const v = $('ptIdIn').value.trim(); if (!v) return; const l = a.slice(); l.unshift({ t: v, at: Date.now() }); S.set('ideas', l); draw(); };
+        $('ptIdAdd').onclick = add;
+        $('ptIdIn').onkeydown = e => { if (e.key === 'Enter') add(); };
+        b.querySelectorAll('[data-d]').forEach(x => x.onclick = () => { const l = a.slice(); l.splice(+x.dataset.d, 1); S.set('ideas', l); draw(); });
+        b.querySelectorAll('[data-s]').forEach(x => x.onclick = () => { try { P41().insert(a[+x.dataset.s].t); } catch (e) {} close(); });
+      };
+      draw();
+    }
+  };
+
+  /* =====================================================
+     6. ПРОФИЛЬ СОБЕСЕДНИКА (расширенный)
+     ===================================================== */
+  function peerCard() {
+    const u = AppState.activeChat;
+    if (!u) return flash('Открой чат');
+    const list = msgsOf(u.id);
+    const mine = list.filter(m => m.senderId === me().id).length;
+    const first = list.length ? new Date(list[0].time).toLocaleDateString('ru-RU') : '—';
+    const last = list.length ? new Date(list[list.length - 1].time).toLocaleString('ru-RU') : '—';
+    const av = u.avatar ? 'background-image:url(' + esc(u.avatar) + ');background-size:cover' : 'background:' + esc(u.color || '#2b5278');
+    const on = Find.online(u);
+    const html =
+      '<div class="pt-peer"><div class="pt-peer-av" style="' + av + '">' + (u.avatar ? '' : esc((u.name || '?')[0].toUpperCase())) + '</div>' +
+      '<div class="pt-peer-n">' + esc(u.name || '') + '</div>' +
+      '<div class="pt-peer-t">' + esc(u.tag || '') + '</div>' +
+      '<div class="pt-peer-s">' + (on ? '🟢 в сети' : '⚪ не в сети') + '</div></div>' +
+      ['Сообщений всего:' + list.length, 'Ваших:' + mine, 'Его/её:' + (list.length - mine),
+       'Первое:' + first, 'Последнее:' + last, 'ID:' + (u.id || '').slice(0, 14)]
+        .map(r => { const p = r.split(':'); return '<div class="pt-strow"><span>' + p[0] + '</span><b>' + esc(p.slice(1).join(':')) + '</b></div>'; }).join('') +
+      '<button class="pt-btn41" id="ptPeerCopy">📋 Копировать @тег</button>' +
+      '<button class="pt-btn41" id="ptPeerGal">🖼️ Медиа этого чата</button>' +
+      '<button class="pt-btn41" id="ptPeerExp">💾 Выгрузить переписку</button>';
+    const b = modal('👤 Профиль', html);
+    if (!b) return;
+    $('ptPeerCopy').onclick = () => { try { PT40.copyText(u.tag || u.id); } catch (e) {} };
+    $('ptPeerGal').onclick = () => { close(); try { P41().gallery(); } catch (e) {} };
+    $('ptPeerExp').onclick = () => { try { P41().exportChat('html'); } catch (e) {} };
+  }
+
+  /* =====================================================
+     7. ЭФФЕКТЫ (конфетти на праздничные слова)
+     ===================================================== */
+  function confetti(n) {
+    if (P41() && P41().cfg.animations === false) return;
+    const c = document.createElement('div');
+    c.className = 'pt-conf';
+    for (let i = 0; i < (n || 26); i++) {
+      const s = document.createElement('i');
+      s.style.left = Math.random() * 100 + '%';
+      s.style.background = ['#f43f5e', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7'][i % 5];
+      s.style.animationDelay = (Math.random() * 0.4) + 's';
+      s.style.animationDuration = (1.5 + Math.random()) + 's';
+      c.appendChild(s);
+    }
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2800);
+  }
+  const PARTY = ['ура', 'поздравляю', 'с днём рождения', 'с др', 'congrats', 'ураа', 'победа'];
+
+  window.__PT42.SoundUI = SoundUI;
+  window.__PT42.Dash = Dash;
+  window.__PT42.Sched = Sched;
+  window.__PT42.translate = translate;
+  window.__PT42.poll = poll;
+  window.__PT42.Ideas = Ideas;
+  window.__PT42.peerCard = peerCard;
+  window.__PT42.confetti = confetti;
+  window.__PT42.PARTY = PARTY;
+})();
+
+(() => {
+  if (!window.__PT42 || window.__PT42C) return;
+  window.__PT42C = true;
+  const Q = window.__PT42;
+  const { $, qs, me, esc, log, S, flash, plain, chatKey, Sound, Find, Mention,
+          SoundUI, Dash, Sched, translate, poll, Ideas, peerCard, confetti, PARTY, P41 } = Q;
+
+  /* ===== звуки на реальные события ===== */
+  let seen = {}, inited = false, unread = 0;
+  function watch() {
+    if (typeof AppState === 'undefined' || !me()) return;
+    const myTag = ((me().tag || '') + '').toLowerCase();
+    const myName = ((me().name || '') + '').toLowerCase();
+    Object.keys(AppState.messages || {}).forEach(k => {
+      const arr = AppState.messages[k] || [];
+      const prev = seen[k];
+      seen[k] = arr.length;
+      if (!inited || prev === undefined || arr.length <= prev) return;
+      const fresh = arr.slice(prev).filter(m => m.senderId !== me().id);
+      if (!fresh.length) return;
+      const active = AppState.activeChat && k === chatKey(AppState.activeChat.id);
+      fresh.forEach(m => {
+        const t = String(m.text || '').toLowerCase();
+        const isFile = t.startsWith('__attach');
+        const isMention = (myTag && t.includes(myTag)) || (myName.length > 2 && t.includes('@' + myName));
+        Sound.play(isMention ? 'mention' : isFile ? 'file' : 'in');
+        if (isMention) flash('🔔 Вас упомянули!');
+        if (PARTY.some(p => t.includes(p))) confetti();
+      });
+      if (!active || document.hidden) {
+        unread += fresh.length;
+        document.title = unread ? '(' + unread + ') PlayTalk' : 'PlayTalk';
+      }
+    });
+    inited = true;
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { unread = 0; document.title = 'PlayTalk'; } });
+
+  /* звук отправки + конфетти на свои праздничные */
+  function hookSend() {
+    const V = window.PTV38 && PTV38.Send;
+    if (!V || V.__v42) return;
+    V.__v42 = true;
+    const orig = V.run.bind(V);
+    V.run = function () {
+      const i = $('msgTextInput');
+      const t = ((i && i.value) || '').toLowerCase();
+      const r = orig();
+      Sound.play('out');
+      if (PARTY.some(p => t.includes(p))) confetti();
+      return r;
+    };
+  }
+
+  /* звук звонка */
+  function hookCall() {
+    const C = window.PTV38 && PTV38.Call;
+    if (!C || C.__v42) return;
+    C.__v42 = true;
+    const os = C.show.bind(C);
+    C.show = function (mode, peer) { os(mode, peer); Sound.ring(mode === 'incoming' || mode === 'outgoing'); };
+    const oc = C.cleanup.bind(C);
+    C.cleanup = function (m) { Sound.ring(false); oc(m); };
+    if (C.tone) C.tone = () => {};
+  }
+
+  /* реакции — звук */
+  function hookReact() {
+    if (!window.PT40 || PT40.__v42r) return;
+    PT40.__v42r = true;
+    document.addEventListener('click', e => {
+      if (e.target && e.target.closest && e.target.closest('.pt-reaction, .pt-react-bar span')) Sound.play('reaction');
+    }, true);
+  }
+
+  /* ===== кнопки ===== */
+  function buttons() {
+    const acts = qs('.chat-header-actions');
+    if (acts && !$('ptPeerBtn')) {
+      const b = document.createElement('button');
+      b.id = 'ptPeerBtn'; b.className = 'header-icon-btn'; b.title = 'Профиль собеседника'; b.textContent = '👤';
+      b.onclick = () => peerCard();
+      acts.appendChild(b);
+    }
+    const side = qs('.sidebar-header');
+    if (side && !$('ptFindBtn')) {
+      const b = document.createElement('button');
+      b.id = 'ptFindBtn'; b.className = 'header-icon-btn'; b.title = 'Найти человека (Ctrl+P)'; b.textContent = '🔎';
+      b.onclick = () => Find.open();
+      side.appendChild(b);
+    }
+    const bar = qs('#ptQuick');
+    if (bar && !bar.dataset.v42) {
+      bar.dataset.v42 = '1';
+      [['🔎', 'Поиск людей', () => Find.open()],
+       ['🔊', 'Звуки', () => SoundUI.open()],
+       ['📊', 'Дашборд', () => Dash.open()],
+       ['⏰', 'Отложенные', () => Sched.open()],
+       ['💡', 'Идеи', () => Ideas.open()],
+       ['🌐', 'Переводчик', () => translate()]].forEach(it => {
+        const b = document.createElement('button');
+        b.className = 'pt-q'; b.textContent = it[0]; b.title = it[1];
+        b.onclick = e => { e.preventDefault(); it[2](); };
+        bar.appendChild(b);
+      });
+    }
+  }
+
+  /* ===== команды в палитру ===== */
+  function palette() {
+    const P = P41();
+    if (!P || !P.ACTIONS || P.__v42acts) return;
+    P.__v42acts = true;
+    const base = P.ACTIONS;
+    const extra = [
+      ['🔎', 'Найти человека по юзернейму', () => Find.open()],
+      ['🔊', 'Настройки звуков', () => SoundUI.open()],
+      ['📊', 'Дашборд статистики', () => Dash.open()],
+      ['⏰', 'Отложенная отправка', () => Sched.add()],
+      ['📋', 'Список отложенных', () => Sched.open()],
+      ['💡', 'Копилка идей', () => Ideas.open()],
+      ['🌐', 'Переводчик', () => translate()],
+      ['📊', 'Создать опрос', () => poll()],
+      ['👤', 'Профиль собеседника', () => peerCard()],
+      ['🎉', 'Конфетти', () => confetti(60)],
+      ['🔕', 'Тишина вкл/выкл', () => { const m = !S.get('muted', false); S.set('muted', m); flash(m ? '🔕 Звуки выключены' : '🔊 Включены'); }],
+      ['🎵', 'Следующий набор звуков', () => {
+        const ks = Object.keys(Q.PACKS); const c = S.get('pack', 'classic');
+        const n = ks[(ks.indexOf(c) + 1) % ks.length];
+        Sound.setPack(n); flash(Q.PACKS[n].name);
+      }]
+    ];
+    P.ACTIONS = () => base().concat(extra);
+  }
+
+  /* ===== горячие клавиши ===== */
+  function keys() {
+    if (window.__v42k) return;
+    window.__v42k = true;
+    document.addEventListener('keydown', e => {
+      const k = (e.key || '').toLowerCase(), c = e.ctrlKey || e.metaKey;
+      if (c && k === 'p') { e.preventDefault(); Find.open(); }
+      else if (c && e.shiftKey && k === 'd') { e.preventDefault(); Dash.open(); }
+      else if (c && e.shiftKey && k === 's') { e.preventDefault(); SoundUI.open(); }
+      else if (c && e.shiftKey && k === 'm') { e.preventDefault(); const m = !S.get('muted', false); S.set('muted', m); flash(m ? '🔕' : '🔊'); }
+    });
+  }
+
+  function tick() {
+    hookSend(); hookCall(); hookReact(); buttons(); palette();
+    Find.patchSidebar(); Mention.bind(); watch(); Sched.tick();
+  }
+
+  function init() {
+    keys(); tick();
+    setInterval(tick, 2000);
+    log('готово: звуки по событиям, поиск людей, дашборд, отложенные');
+    setTimeout(() => { if (!S.get('hi42', false)) { S.set('hi42', true); flash('🔎 Ctrl+P — поиск людей · 🔊 6 наборов звуков'); } }, 3000);
+  }
+  const boot = () => {
+    if (typeof AppState === 'undefined' || typeof MessagingEngine === 'undefined' || !AppState.currentUser || !window.PT41) { setTimeout(boot, 400); return; }
+    init();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 3400));
+  else setTimeout(boot, 3400);
+  window.PT42 = Q;
+})();
+
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a225a9e469b594c3',t:'MTc4NTI2MDM3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
