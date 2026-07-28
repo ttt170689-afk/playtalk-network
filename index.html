@@ -47,9 +47,15 @@ body.theme-light { --bg-main: #f0f2f5; --bg-sidebar: #fff; --bg-folderbar: #e4e6
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+/* выделять нельзя только служебные элементы управления */
+.sidebar-header, .folder-bar, .chat-header-actions, .header-icon-btn,
+.tool-action-btn, .send-msg-btn, .fab-create-btn, .menu-burger-btn,
+.sticker-drawer-popup, .context-menu-item, .settings-tabs-nav,
+.msg-meta-details, .emoji-cell-item, .pack-nav-icon, button {
   user-select: none;
   -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
@@ -8366,7 +8372,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
       this.patchSettingsSimple();
       this.patchCalls();
       this.patchHeaderInfo();
-      this.patchProfileViewer();
+      if (typeof this.patchProfileViewer === 'function') this.patchProfileViewer();
       this.bindTypingInput();
       this.ensureRealtimeChannels();
       this.refreshTypingUi();
@@ -8582,6 +8588,8 @@ const PT_EXTRA_VISUAL_LIBRARY = [
     /* галочка "часики" у неотправленных */
     const originalRender = MessagingEngine.renderMessages.bind(MessagingEngine);
     const patched = function () {
+      /* если подключён модуль вложений (v39) — рисует он, он умеет фото/видео/файлы */
+      if (window.PTFiles && window.PTFiles.renderMessages) { window.PTFiles.renderMessages(); return; }
       originalRender();
       try {
         if (!AppState.activeChat || !me()) return;
@@ -9017,5 +9025,1367 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a224b517be70ce1b',t:'MTc4NTI1MDM0Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<!-- ============================================================
+     PLAYTALK v39 — ФОТО, ВИДЕО, ФАЙЛЫ
+     ============================================================ -->
+<style id="pt-v39-files-style">
+.pt-attach-btn{position:relative}
+.pt-drop-zone{position:absolute;inset:0;z-index:900;display:none;align-items:center;justify-content:center;background:rgba(11,18,25,.86);backdrop-filter:blur(6px);border:3px dashed rgba(82,136,193,.8);border-radius:18px;pointer-events:none}
+.pt-drop-zone.on{display:flex}
+.pt-drop-inner{text-align:center;color:#fff}
+.pt-drop-inner .ic{font-size:56px;display:block;margin-bottom:10px}
+.pt-drop-inner .tx{font-size:17px;font-weight:800}
+.pt-drop-inner .sb{font-size:13px;color:#9fb3c8;margin-top:4px}
+
+.pt-att{max-width:min(340px,68vw);border-radius:14px;overflow:hidden}
+.pt-att-img{display:block;width:100%;height:auto;max-height:340px;object-fit:cover;border-radius:14px;cursor:zoom-in;background:rgba(255,255,255,.05)}
+.pt-att-video{display:block;width:100%;max-height:340px;border-radius:14px;background:#000}
+.pt-att-audio{width:min(300px,64vw);margin:2px 0}
+.pt-att-cap{font-size:13px;line-height:1.45;margin-top:7px;word-break:break-word;white-space:pre-wrap}
+
+.pt-att-file{display:flex;align-items:center;gap:12px;min-width:min(280px,64vw);padding:11px 13px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);text-decoration:none;color:inherit;transition:.15s}
+.pt-att-file:hover{background:rgba(255,255,255,.12)}
+.pt-att-ic{width:44px;height:44px;flex:0 0 44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;background:linear-gradient(135deg,#5288c1,#2b5278);color:#fff}
+.pt-att-meta{min-width:0;flex:1}
+.pt-att-name{font-size:13.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-att-sub{font-size:11.5px;color:#9fb3c8;margin-top:2px}
+
+.pt-prog-wrap{margin-top:8px;height:5px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}
+.pt-prog-bar{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#649bd3,#8b5cf6);transition:width .18s ease}
+.pt-prog-txt{font-size:11px;color:#cfe0f0;margin-top:5px;font-weight:600}
+.pt-att-err{font-size:11.5px;color:#ffd9d5;margin-top:6px;font-weight:600;line-height:1.45}
+.pt-retry{margin-top:7px;padding:6px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.09);color:#fff;font-size:11.5px;font-weight:700;cursor:pointer}
+.pt-retry:hover{background:rgba(255,255,255,.15)}
+
+.pt-lightbox{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.93);padding:26px}
+.pt-lightbox.hidden{display:none !important}
+.pt-lightbox img,.pt-lightbox video{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain}
+.pt-lb-bar{position:absolute;top:16px;right:18px;display:flex;gap:10px;z-index:2}
+.pt-lb-btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.12);color:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.pt-lb-btn:hover{background:rgba(255,255,255,.22)}
+
+.pt-menu{position:fixed;z-index:100001;min-width:230px;padding:7px;border-radius:15px;background:#1c2733;border:1px solid rgba(255,255,255,.1);box-shadow:0 22px 55px rgba(0,0,0,.6)}
+.pt-menu.hidden{display:none !important}
+.pt-menu-item{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:0;border-radius:11px;background:transparent;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;text-align:left}
+.pt-menu-item:hover{background:rgba(255,255,255,.09)}
+.pt-menu-item .ic{font-size:18px;width:22px;text-align:center}
+.pt-menu-hint{padding:8px 12px 4px;font-size:11px;color:#7f91a4;line-height:1.5}
+.pt-msg-pending .pt-att{opacity:.72}
+@media(max-width:768px){.pt-att{max-width:74vw}}
+</style>
+
+<script id="pt-v39-files-script">
+(() => {
+  if (window.__playTalkV39Loaded) return;
+  window.__playTalkV39Loaded = true;
+
+  const SUPABASE_URL = 'https://kxfrlggnjkrquczjaiqb.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_okGGbpyPata_z311qSkTnQ_NhnFwZ5G';
+  const BUCKET  = 'chat-files';
+  const PREFIX  = '__attach_v1__:';
+  const WALL    = '__wallpaper_offer__:';
+
+  const MAX_STORAGE = 50 * 1024 * 1024;   /* 50 МБ — когда хранилище подключено */
+  const MAX_INLINE  = 520 * 1024;         /* ~520 КБ — режим без хранилища */
+
+  const $ = id => document.getElementById(id);
+  const me = () => (typeof AppState !== 'undefined' && AppState.currentUser) || null;
+  const toast = m => { try { AppEngine.showToast(m); } catch (e) {} };
+  const esc = s => { const d = document.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; };
+  const log = (...a) => console.log('%c[PlayTalk v39]', 'color:#8b5cf6;font-weight:700', ...a);
+
+  let storageReady = null;   /* null = не проверяли, true/false = результат */
+
+  function client() {
+    try { if (window.PTV38 && PTV38.getClient) return PTV38.getClient(); } catch (e) {}
+    if (window.__ptClientV38) return window.__ptClientV38;
+    if (window.supabase && window.supabase.createClient) {
+      window.__ptClientV38 = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return window.__ptClientV38;
+    }
+    return null;
+  }
+  const chatKey = id => [me().id, id].sort().join('__');
+  const activeList = () => (AppState.messages[chatKey(AppState.activeChat.id)] || []);
+
+  function fmtSize(b) {
+    if (!b && b !== 0) return '';
+    if (b < 1024) return b + ' Б';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(0) + ' КБ';
+    return (b / 1048576).toFixed(1) + ' МБ';
+  }
+  function kindOf(type, name) {
+    const t = (type || '').toLowerCase();
+    const n = (name || '').toLowerCase();
+    if (t.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp|avif|heic)$/.test(n)) return 'image';
+    if (t.startsWith('video/') || /\.(mp4|webm|mov|m4v|avi|mkv)$/.test(n)) return 'video';
+    if (t.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac|opus)$/.test(n)) return 'audio';
+    return 'file';
+  }
+  function fileIcon(k, name) {
+    if (k === 'image') return '🖼️';
+    if (k === 'video') return '🎬';
+    if (k === 'audio') return '🎵';
+    const n = (name || '').toLowerCase();
+    if (/\.pdf$/.test(n)) return '📕';
+    if (/\.(zip|rar|7z|tar|gz)$/.test(n)) return '🗜️';
+    if (/\.(doc|docx|rtf|odt)$/.test(n)) return '📘';
+    if (/\.(xls|xlsx|csv|ods)$/.test(n)) return '📗';
+    if (/\.(ppt|pptx|odp)$/.test(n)) return '📙';
+    if (/\.(txt|md|log)$/.test(n)) return '📄';
+    if (/\.(js|ts|py|java|c|cpp|cs|html|css|json|xml|sh)$/.test(n)) return '💻';
+    if (/\.(apk|exe|dmg|msi)$/.test(n)) return '📦';
+    return '📎';
+  }
+  function labelOf(k) {
+    return k === 'image' ? '📷 Фото' : k === 'video' ? '🎬 Видео' : k === 'audio' ? '🎵 Аудио' : '📎 Файл';
+  }
+
+  const encode = meta => PREFIX + JSON.stringify(meta);
+  function decode(text) {
+    if (typeof text !== 'string' || !text.startsWith(PREFIX)) return null;
+    try { return JSON.parse(text.slice(PREFIX.length)); } catch (e) { return null; }
+  }
+  function parseWall(text) {
+    if (typeof text !== 'string' || !text.startsWith(WALL)) return null;
+    try { return JSON.parse(text.slice(WALL.length)); } catch (e) { return null; }
+  }
+
+  /* ---------- сжатие картинок ---------- */
+  function compress(file, maxDim, quality) {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        const s = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.max(1, Math.round(w * s)); h = Math.max(1, Math.round(h * s));
+        try {
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          c.toBlob(b => resolve(b ? { blob: b, w, h } : { blob: file, w, h }), 'image/jpeg', quality);
+        } catch (e) { resolve({ blob: file, w, h }); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve({ blob: file, w: 0, h: 0 }); };
+      img.src = url;
+    });
+  }
+  const toDataUrl = blob => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error('Не удалось прочитать файл'));
+    r.readAsDataURL(blob);
+  });
+
+  /* ---------- загрузка в хранилище ---------- */
+  async function uploadToStorage(blob, path, mime, onProgress) {
+    const c = client();
+    if (!c) throw new Error('Supabase не загрузился');
+    let token = SUPABASE_KEY;
+    try {
+      const { data } = await c.auth.getSession();
+      if (data && data.session && data.session.access_token) token = data.session.access_token;
+    } catch (e) {}
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + path, true);
+      xhr.setRequestHeader('apikey', SUPABASE_KEY);
+      xhr.setRequestHeader('authorization', 'Bearer ' + token);
+      xhr.setRequestHeader('x-upsert', 'true');
+      if (mime) xhr.setRequestHeader('content-type', mime);
+      xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(SUPABASE_URL + '/storage/v1/object/public/' + BUCKET + '/' + path);
+          return;
+        }
+        let msg = 'HTTP ' + xhr.status;
+        try { const j = JSON.parse(xhr.responseText); msg = j.message || j.error || msg; } catch (e) {}
+        const err = new Error(msg);
+        if (xhr.status === 404 || /bucket not found/i.test(msg)) err.noBucket = true;
+        if (xhr.status === 403 || /row-level security|policy|unauthorized/i.test(msg)) err.noPolicy = true;
+        reject(err);
+      };
+      xhr.onerror = () => reject(new Error('Нет связи с сервером'));
+      xhr.send(blob);
+    });
+  }
+
+  async function checkStorage() {
+    if (storageReady !== null) return storageReady;
+    try {
+      const r = await fetch(SUPABASE_URL + '/storage/v1/object/list/' + BUCKET, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, 'content-type': 'application/json' },
+        body: JSON.stringify({ limit: 1, prefix: '' })
+      });
+      storageReady = r.status !== 404;
+    } catch (e) { storageReady = false; }
+    log('хранилище ' + (storageReady ? 'подключено' : 'НЕ подключено — фото пойдут в упрощённом режиме'));
+    return storageReady;
+  }
+
+  /* =========================================================
+     ОТПРАВКА
+     ========================================================= */
+  const pendingFiles = {};   /* tmpId -> File (для повтора) */
+
+  async function sendFiles(fileList) {
+    const files = [...fileList].filter(Boolean);
+    if (!files.length) return;
+    if (!me()) { toast('Сначала войди в аккаунт'); return; }
+    if (!AppState.activeChat) { toast('Открой чат'); return; }
+    if (files.length > 10) { toast('За раз можно отправить не больше 10 файлов'); files.length = 10; }
+    for (const f of files) await sendOne(f);
+  }
+
+  async function sendOne(file, retryId) {
+    const chat = AppState.activeChat;
+    const key = chatKey(chat.id);
+    const kind = kindOf(file.type, file.name);
+    const tmpId = retryId || ('tmpf_' + Date.now() + '_' + Math.random().toString(16).slice(2));
+    pendingFiles[tmpId] = file;
+
+    AppState.messages[key] = AppState.messages[key] || [];
+    let entry = AppState.messages[key].find(m => m.id === tmpId);
+    if (!entry) {
+      entry = {
+        id: tmpId, senderId: me().id, recipientId: chat.id, time: Date.now(),
+        type: 'text', pending: true, progress: 0, failed: false,
+        text: encode({ k: kind, n: file.name, s: file.size, m: file.type, u: '', local: 1 })
+      };
+      if (kind === 'image' || kind === 'video') { try { entry.previewUrl = URL.createObjectURL(file); } catch (e) {} }
+      AppState.messages[key].push(entry);
+    } else {
+      entry.failed = false; entry.error = ''; entry.pending = true; entry.progress = 0;
+    }
+    render();
+
+    const fail = msg => {
+      entry.pending = false; entry.failed = true; entry.error = msg;
+      render();
+      toast('❌ ' + (msg.length > 60 ? 'Файл не отправлен' : msg));
+    };
+
+    try {
+      const hasStorage = await checkStorage();
+
+      /* ---- режим 1: хранилище подключено ---- */
+      if (hasStorage) {
+        if (file.size > MAX_STORAGE) { fail('Файл больше 50 МБ — слишком большой'); return; }
+        let blob = file, w = 0, h = 0;
+        if (kind === 'image' && file.size > 1.2 * 1024 * 1024 && !/gif/i.test(file.type)) {
+          const r = await compress(file, 1920, 0.85); blob = r.blob; w = r.w; h = r.h;
+        }
+        const ext = (file.name.match(/\.([a-z0-9]{1,8})$/i) || [, 'bin'])[1].toLowerCase();
+        const path = me().id + '/' + Date.now() + '_' + Math.random().toString(16).slice(2) + '.' + ext;
+        const url = await uploadToStorage(blob, path, blob.type || file.type, p => {
+          entry.progress = p; updateProgress(tmpId, p);
+        });
+        await finish(entry, key, tmpId, { k: kind, n: file.name, s: blob.size, m: file.type, u: url, w, h });
+        return;
+      }
+
+      /* ---- режим 2: без хранилища — только картинки, встроенные в сообщение ---- */
+      if (kind !== 'image') {
+        fail('Видео и файлы требуют подключения хранилища (см. ФАЙЛЫ_НАСТРОЙКА.md). Фото работают уже сейчас.');
+        return;
+      }
+      entry.progress = 0.3; updateProgress(tmpId, 0.3);
+      let { blob, w, h } = await compress(file, 1600, 0.82);
+      if (blob.size > MAX_INLINE) ({ blob, w, h } = await compress(file, 1200, 0.7));
+      if (blob.size > MAX_INLINE) ({ blob, w, h } = await compress(file, 900, 0.6));
+      if (blob.size > MAX_INLINE) {
+        fail('Фото слишком тяжёлое для упрощённого режима. Подключи хранилище — тогда пойдут любые файлы.');
+        return;
+      }
+      entry.progress = 0.7; updateProgress(tmpId, 0.7);
+      const dataUrl = await toDataUrl(blob);
+      await finish(entry, key, tmpId, { k: 'image', n: file.name, s: blob.size, m: 'image/jpeg', d: dataUrl, w, h });
+    } catch (err) {
+      if (err && err.noBucket) { storageReady = false; fail('Хранилище не найдено — открой ФАЙЛЫ_НАСТРОЙКА.md'); return; }
+      if (err && err.noPolicy) { fail('Хранилище закрыто правами доступа — выполни SQL из ФАЙЛЫ_НАСТРОЙКА.md'); return; }
+      fail((err && err.message) || 'Не удалось отправить');
+      console.error('[PlayTalk v39]', err);
+    }
+  }
+
+  async function finish(entry, key, tmpId, meta) {
+    const c = client();
+    if (!c) throw new Error('Supabase не загрузился');
+    const { data, error } = await c.from('messages').insert({
+      sender_id: me().id, recipient_id: entry.recipientId, body: encode(meta)
+    }).select().single();
+    if (error) throw new Error(error.message);
+
+    const arr = AppState.messages[key] || [];
+    const i = arr.findIndex(m => m.id === tmpId);
+    if (i !== -1) {
+      if (arr[i].previewUrl) { try { URL.revokeObjectURL(arr[i].previewUrl); } catch (e) {} }
+      arr.splice(i, 1);
+    }
+    delete pendingFiles[tmpId];
+    const real = {
+      id: data.id, senderId: data.sender_id, recipientId: data.recipient_id,
+      text: data.body, time: new Date(data.created_at).getTime(), type: 'text'
+    };
+    if (!arr.find(m => m.id === real.id)) arr.push(real);
+    arr.sort((a, b) => a.time - b.time);
+    render();
+    try { AppEngine.renderChatList(); } catch (e) {}
+  }
+
+  function updateProgress(tmpId, p) {
+    const row = document.querySelector('[data-mid="' + tmpId + '"]');
+    if (!row) return;
+    const bar = row.querySelector('.pt-prog-bar');
+    const txt = row.querySelector('.pt-prog-txt');
+    if (bar) bar.style.width = Math.round(p * 100) + '%';
+    if (txt) txt.textContent = 'Отправка ' + Math.round(p * 100) + '%';
+  }
+
+  window.__ptRetry = id => { const f = pendingFiles[id]; if (f) sendOne(f, id); };
+
+  /* =========================================================
+     ОТРИСОВКА
+     ========================================================= */
+  function bubbleFor(msg, isOut) {
+    const bub = document.createElement('div');
+    bub.className = 'msg-bubble-card';
+    const meta = decode(msg.text);
+
+    if (meta) {
+      const box = document.createElement('div');
+      box.className = 'pt-att';
+      const src = msg.previewUrl || meta.u || meta.d || '';
+
+      if (meta.k === 'image' && src) {
+        const img = document.createElement('img');
+        img.className = 'pt-att-img'; img.src = src; img.alt = meta.n || 'фото'; img.loading = 'lazy';
+        if (!msg.pending) img.onclick = () => lightbox(src, 'image', meta.n);
+        box.appendChild(img);
+      } else if (meta.k === 'video' && src) {
+        const v = document.createElement('video');
+        v.className = 'pt-att-video'; v.src = src; v.controls = true; v.preload = 'metadata'; v.playsInline = true;
+        box.appendChild(v);
+      } else if (meta.k === 'audio' && src) {
+        const a = document.createElement('audio');
+        a.className = 'pt-att-audio'; a.src = src; a.controls = true; a.preload = 'metadata';
+        box.appendChild(a);
+      } else {
+        const card = document.createElement(src && !msg.pending ? 'a' : 'div');
+        card.className = 'pt-att-file';
+        if (src && !msg.pending) { card.href = src; card.target = '_blank'; card.rel = 'noopener'; card.download = meta.n || 'file'; }
+        card.innerHTML =
+          '<div class="pt-att-ic">' + fileIcon(meta.k, meta.n) + '</div>' +
+          '<div class="pt-att-meta"><div class="pt-att-name">' + esc(meta.n || 'Файл') + '</div>' +
+          '<div class="pt-att-sub">' + fmtSize(meta.s) + (msg.pending ? '' : ' · нажми, чтобы скачать') + '</div></div>';
+        box.appendChild(card);
+      }
+      bub.appendChild(box);
+
+      if (msg.pending) {
+        const w = document.createElement('div'); w.className = 'pt-prog-wrap';
+        const b = document.createElement('div'); b.className = 'pt-prog-bar';
+        b.style.width = Math.round((msg.progress || 0) * 100) + '%';
+        w.appendChild(b); bub.appendChild(w);
+        const t = document.createElement('div'); t.className = 'pt-prog-txt';
+        t.textContent = 'Отправка ' + Math.round((msg.progress || 0) * 100) + '%';
+        bub.appendChild(t);
+      }
+      if (msg.failed) {
+        const e = document.createElement('div'); e.className = 'pt-att-err';
+        e.textContent = '❌ ' + (msg.error || 'Не отправлено');
+        bub.appendChild(e);
+        if (pendingFiles[msg.id]) {
+          const r = document.createElement('button');
+          r.className = 'pt-retry'; r.textContent = '↻ Повторить';
+          r.onclick = () => window.__ptRetry(msg.id);
+          bub.appendChild(r);
+        }
+      }
+      return bub;
+    }
+
+    const wall = parseWall(msg.text);
+    if (wall) {
+      bub.innerHTML =
+        '<div class="wallpaper-offer-card">' +
+          '<div style="font-size:13px;font-weight:800;color:#fff;">🎨 Предложение поставить обои</div>' +
+          '<div class="wallpaper-offer-preview" style="background:' + esc(wall.value) + '"></div>' +
+          '<div style="font-size:12px;color:rgba(255,255,255,.8);">' + esc(wall.name || 'Обои') + '</div>' +
+          (isOut ? '<div style="font-size:11px;color:rgba(255,255,255,.65);">Отправлено собеседнику</div>'
+                 : '<div class="wallpaper-offer-actions"><button class="accept" onclick="window.V36&&V36.acceptWallpaper(\'' + esc(msg.id) + '\')">Поставить</button><button onclick="window.V36&&V36.declineWallpaper()">Нет</button></div>') +
+        '</div>';
+      return bub;
+    }
+
+    if (msg.type === 'voice' && msg.audioUrl) {
+      const a = document.createElement('audio');
+      a.className = 'pt-att-audio'; a.src = msg.audioUrl; a.controls = true;
+      bub.appendChild(a);
+      return bub;
+    }
+
+    const d = document.createElement('div');
+    d.textContent = msg.text == null ? '' : msg.text;
+    bub.appendChild(d);
+    return bub;
+  }
+
+  function render() {
+    if (typeof AppState === 'undefined' || !AppState.activeChat || !me()) return;
+    const vp = $('messagesViewport');
+    if (!vp) return;
+    const list = activeList().slice().sort((a, b) => a.time - b.time);
+    vp.innerHTML = '';
+    if (!list.length) {
+      vp.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">Отправьте первое сообщение! 👋</div>';
+      return;
+    }
+    let lastDate = null;
+    list.forEach(msg => {
+      const ds = new Date(msg.time).toDateString();
+      if (ds !== lastDate) {
+        const sep = document.createElement('div');
+        sep.className = 'msg-date-separator';
+        try { sep.textContent = MessagingEngine.formatDate(msg.time); }
+        catch (e) { sep.textContent = new Date(msg.time).toLocaleDateString(); }
+        vp.appendChild(sep);
+        lastDate = ds;
+      }
+      const isOut = msg.senderId === me().id;
+      const row = document.createElement('div');
+      row.className = 'msg-row-container ' + (isOut ? 'outgoing' : 'incoming') + (msg.pending ? ' pt-msg-pending' : '');
+      row.dataset.mid = msg.id;
+
+      if (msg.type === 'sticker' && msg.stickerUrl) {
+        const i = document.createElement('img');
+        i.className = 'sticker-msg-img'; i.src = msg.stickerUrl;
+        row.appendChild(i);
+        vp.appendChild(row);
+        return;
+      }
+
+      const bub = bubbleFor(msg, isOut);
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta-details';
+      let time = '';
+      try { time = AppEngine.formatTime(msg.time); } catch (e) {}
+      meta.innerHTML = '<div>' + time + '</div>' +
+        (isOut ? '<div class="msg-check-mark">' + (msg.failed ? '⚠️' : msg.pending ? '🕐' : '✓✓') + '</div>' : '');
+      bub.appendChild(meta);
+      row.appendChild(bub);
+      vp.appendChild(row);
+    });
+    vp.scrollTop = vp.scrollHeight;
+  }
+
+  /* превью в списке чатов: вместо служебной строки — "📷 Фото" */
+  function fixPreviews() {
+    document.querySelectorAll('.chat-last-message').forEach(el => {
+      const t = el.textContent || '';
+      if (t.startsWith(PREFIX)) {
+        const m = decode(t);
+        el.textContent = m ? (labelOf(m.k) + (m.n && m.k === 'file' ? ' · ' + m.n : '')) : '📎 Файл';
+      } else if (t.startsWith(WALL)) {
+        el.textContent = '🎨 Обои';
+      }
+    });
+  }
+  function wrapChatList() {
+    if (typeof AppEngine === 'undefined' || !AppEngine.renderChatList) return;
+    if (AppEngine.renderChatList.__ptWrapped) return;
+    const orig = AppEngine.renderChatList.bind(AppEngine);
+    const wrapped = function () { const r = orig.apply(null, arguments); try { fixPreviews(); } catch (e) {} return r; };
+    wrapped.__ptWrapped = true;
+    try { AppEngine.renderChatList = wrapped; } catch (e) {}
+  }
+
+  /* =========================================================
+     ПРОСМОТР ФОТО
+     ========================================================= */
+  function lightbox(src, kind, name) {
+    let lb = $('ptLightbox');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'ptLightbox'; lb.className = 'pt-lightbox hidden';
+      lb.innerHTML = '<div class="pt-lb-bar"><a class="pt-lb-btn" id="ptLbDl" title="Скачать" download>⬇</a><button class="pt-lb-btn" id="ptLbX" title="Закрыть">✕</button></div><div id="ptLbBody"></div>';
+      document.body.appendChild(lb);
+      lb.onclick = e => { if (e.target === lb) close(); };
+      $('ptLbX').onclick = close;
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    }
+    function close() { lb.classList.add('hidden'); $('ptLbBody').innerHTML = ''; }
+    const body = $('ptLbBody');
+    body.innerHTML = '';
+    const el = document.createElement(kind === 'video' ? 'video' : 'img');
+    el.src = src;
+    if (kind === 'video') { el.controls = true; el.autoplay = true; }
+    body.appendChild(el);
+    const dl = $('ptLbDl');
+    dl.href = src; dl.setAttribute('download', name || 'file');
+    lb.classList.remove('hidden');
+  }
+
+  /* =========================================================
+     КНОПКА 📎 / DRAG&DROP / ВСТАВКА
+     ========================================================= */
+  function picker(accept) {
+    const i = document.createElement('input');
+    i.type = 'file'; i.multiple = true;
+    if (accept) i.accept = accept;
+    i.style.display = 'none';
+    document.body.appendChild(i);
+    i.onchange = () => { sendFiles(i.files); setTimeout(() => i.remove(), 500); };
+    i.click();
+  }
+
+  function menu(anchor) {
+    let m = $('ptAttachMenu');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'ptAttachMenu'; m.className = 'pt-menu hidden';
+      m.innerHTML =
+        '<button class="pt-menu-item" data-a="image"><span class="ic">🖼️</span>Фото</button>' +
+        '<button class="pt-menu-item" data-a="video"><span class="ic">🎬</span>Видео</button>' +
+        '<button class="pt-menu-item" data-a="file"><span class="ic">📎</span>Файл или документ</button>' +
+        '<div class="pt-menu-hint" id="ptAttachHint"></div>';
+      document.body.appendChild(m);
+      m.querySelectorAll('.pt-menu-item').forEach(b => {
+        b.onclick = () => {
+          m.classList.add('hidden');
+          const a = b.dataset.a;
+          picker(a === 'image' ? 'image/*' : a === 'video' ? 'video/*' : null);
+        };
+      });
+      document.addEventListener('click', e => {
+        if (!m.classList.contains('hidden') && !e.target.closest('#ptAttachMenu') && !e.target.closest('.pt-attach-btn')) m.classList.add('hidden');
+      });
+    }
+    const hint = $('ptAttachHint');
+    hint.textContent = storageReady === false
+      ? 'Хранилище не подключено: пока можно слать только фото. Видео и файлы — после настройки.'
+      : 'Можно перетащить файл прямо в чат или вставить фото через Ctrl+V.';
+    m.classList.remove('hidden');
+    const r = anchor.getBoundingClientRect();
+    const mr = m.getBoundingClientRect();
+    let left = r.left;
+    if (left + mr.width > window.innerWidth - 10) left = window.innerWidth - mr.width - 10;
+    m.style.left = Math.max(10, left) + 'px';
+    m.style.top = Math.max(10, r.top - mr.height - 10) + 'px';
+  }
+
+  function injectButton() {
+    const bar = document.querySelector('.chat-input-bar-container');
+    if (!bar || $('ptAttachBtn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'ptAttachBtn';
+    btn.className = 'tool-action-btn pt-attach-btn';
+    btn.title = 'Прикрепить фото, видео или файл';
+    btn.textContent = '📎';
+    btn.onclick = e => { e.preventDefault(); e.stopPropagation(); checkStorage().then(() => menu(btn)); };
+    const mic = $('micBtn');
+    if (mic) bar.insertBefore(btn, mic); else bar.appendChild(btn);
+  }
+
+  function bindDrop() {
+    const zone = document.getElementById('chatViewViewport');
+    if (!zone || zone.dataset.ptDrop === '1') return;
+    zone.dataset.ptDrop = '1';
+    if (getComputedStyle(zone).position === 'static') zone.style.position = 'relative';
+    const ov = document.createElement('div');
+    ov.className = 'pt-drop-zone';
+    ov.innerHTML = '<div class="pt-drop-inner"><span class="ic">📥</span><div class="tx">Отпусти, чтобы отправить</div><div class="sb">фото, видео или файл</div></div>';
+    zone.appendChild(ov);
+    let depth = 0;
+    const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+    zone.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); depth++; if (AppState.activeChat) ov.classList.add('on'); });
+    zone.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+    zone.addEventListener('dragleave', e => { if (!hasFiles(e)) return; depth = Math.max(0, depth - 1); if (!depth) ov.classList.remove('on'); });
+    zone.addEventListener('drop', e => {
+      if (!hasFiles(e)) return;
+      e.preventDefault(); depth = 0; ov.classList.remove('on');
+      if (!AppState.activeChat) { toast('Сначала открой чат'); return; }
+      sendFiles(e.dataTransfer.files);
+    });
+    window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+    window.addEventListener('drop', e => { if (hasFiles(e)) e.preventDefault(); });
+  }
+
+  function bindPaste() {
+    const inp = $('msgTextInput');
+    if (!inp || inp.dataset.ptPaste === '1') return;
+    inp.dataset.ptPaste = '1';
+    inp.addEventListener('paste', e => {
+      const items = (e.clipboardData && e.clipboardData.files) || [];
+      if (!items.length) return;
+      e.preventDefault();
+      sendFiles(items);
+    });
+  }
+
+  const V39 = {
+    renderMessages: render,
+    bubbleFor, decode, encode, lightbox, fmtSize, fileIcon, labelOf, kindOf, esc,
+    sendFiles,
+    init() {
+      injectButton(); bindDrop(); bindPaste(); wrapChatList();
+      checkStorage();
+      render();
+      setInterval(() => { injectButton(); bindDrop(); bindPaste(); wrapChatList(); }, 2500);
+      log('готово: фото, видео и файлы подключены');
+    }
+  };
+  window.PTFiles = V39;
+
+  const boot = () => {
+    if (typeof AppState === 'undefined' || typeof MessagingEngine === 'undefined' || !AppState.currentUser) { setTimeout(boot, 400); return; }
+    V39.init();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 2200));
+  else setTimeout(boot, 2200);
+})();
+</script>
+
+<!-- ============================================================
+     PLAYTALK v40 — ДЕМОНСТРАЦИЯ ЭКРАНА, КОПИРОВАНИЕ И МНОГОЕ ДРУГОЕ
+     ============================================================ -->
+<style id="pt-v40-style">
+/* ---------- КОПИРОВАНИЕ: снимаем глобальный запрет ---------- */
+.msg-bubble-card, .msg-bubble-card *,
+.pt-att-cap, .pt-att-name, .chat-last-message,
+.field-input, input, textarea, .pt-selectable,
+#profileBio, #profilePhone, #profileTag, #profileName,
+.pt-code, .pt-quote-text {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  cursor: auto;
+}
+.msg-bubble-card ::selection { background: rgba(130,180,255,.45); color: #fff; }
+.no-copy .msg-bubble-card, .no-copy .msg-bubble-card * { user-select: none !important; -webkit-user-select: none !important; }
+
+/* ---------- контекстное меню сообщения ---------- */
+.pt-cm { position: fixed; z-index: 100002; min-width: 218px; padding: 6px; border-radius: 14px;
+  background: #1c2733; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 20px 50px rgba(0,0,0,.62); }
+.pt-cm.hidden { display: none !important; }
+.pt-cm button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 11px; border: 0;
+  border-radius: 10px; background: transparent; color: #fff; font-size: 13.5px; font-weight: 600; cursor: pointer; text-align: left; }
+.pt-cm button:hover { background: rgba(255,255,255,.09); }
+.pt-cm button.danger { color: #ff9b92; }
+.pt-cm .ic { width: 20px; text-align: center; font-size: 15px; }
+.pt-cm .sep { height: 1px; margin: 5px 4px; background: rgba(255,255,255,.08); }
+
+/* ---------- реакции ---------- */
+.pt-reactions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.pt-reaction { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 99px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12); font-size: 12px; cursor: pointer; user-select: none; }
+.pt-reaction.mine { background: rgba(82,136,193,.32); border-color: rgba(82,136,193,.5); }
+.pt-reaction:hover { background: rgba(255,255,255,.18); }
+.pt-react-bar { position: fixed; z-index: 100003; display: flex; gap: 4px; padding: 6px; border-radius: 99px;
+  background: #1c2733; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 14px 36px rgba(0,0,0,.55); }
+.pt-react-bar.hidden { display: none !important; }
+.pt-react-bar span { font-size: 21px; cursor: pointer; padding: 3px 5px; border-radius: 50%; transition: transform .12s; }
+.pt-react-bar span:hover { transform: scale(1.32); background: rgba(255,255,255,.1); }
+
+/* ---------- ответ / пересылка / изменено ---------- */
+.pt-quote { border-left: 3px solid var(--tg-accent); padding: 4px 0 4px 9px; margin-bottom: 6px; opacity: .92; }
+.pt-quote-name { font-size: 12px; font-weight: 800; color: var(--tg-accent); }
+.pt-quote-text { font-size: 12.5px; color: rgba(255,255,255,.78); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pt-fwd { font-size: 11.5px; color: var(--tg-accent); font-weight: 700; margin-bottom: 4px; }
+.pt-edited { font-size: 10.5px; opacity: .65; margin-left: 5px; }
+.pt-reply-bar { display: none; align-items: center; gap: 10px; margin: 0 12px 6px; padding: 8px 11px;
+  border-radius: 12px; background: rgba(82,136,193,.13); border: 1px solid rgba(82,136,193,.24); }
+.pt-reply-bar.on { display: flex; }
+.pt-reply-bar .body { flex: 1; min-width: 0; }
+.pt-reply-bar .x { cursor: pointer; font-size: 17px; opacity: .8; padding: 0 4px; }
+
+/* ---------- демонстрация экрана ---------- */
+.pt-screen-badge { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 100004;
+  display: none; align-items: center; gap: 10px; padding: 9px 15px; border-radius: 99px;
+  background: rgba(20,29,39,.96); border: 1px solid rgba(82,136,193,.45); box-shadow: 0 12px 34px rgba(0,0,0,.5);
+  color: #fff; font-size: 13px; font-weight: 700; }
+.pt-screen-badge.on { display: flex; }
+.pt-screen-badge .dot { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; animation: ptBlink 1.3s infinite; }
+.pt-screen-badge button { padding: 5px 11px; border-radius: 8px; border: 0; background: #e5544a; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+.pt-cbtn.sharing { background: #3fae63 !important; }
+
+/* ---------- поиск по сообщениям ---------- */
+.pt-search-panel { display: none; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--panel-border); background: rgba(0,0,0,.18); }
+.pt-search-panel.on { display: flex; }
+.pt-search-panel input { flex: 1; padding: 8px 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06); color: #fff; font-size: 13px; outline: none; }
+.pt-search-panel .cnt { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.pt-search-panel button { padding: 6px 10px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.07); color: #fff; cursor: pointer; font-size: 13px; }
+.pt-hl { background: rgba(250,204,21,.42); border-radius: 3px; }
+.pt-found { outline: 2px solid rgba(250,204,21,.75); outline-offset: 2px; border-radius: 14px; }
+
+/* ---------- прочее ---------- */
+.pt-scroll-btn { position: absolute; right: 20px; bottom: 90px; width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.12); background: #1c2733; color: #fff; font-size: 19px; cursor: pointer;
+  display: none; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(0,0,0,.45); z-index: 60; }
+.pt-scroll-btn.on { display: flex; }
+.pt-scroll-btn .badge { position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; border-radius: 99px;
+  background: var(--tg-accent); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+.pt-link { color: #7cc0ff; text-decoration: underline; word-break: break-all; }
+.pt-code { display: block; padding: 9px 11px; margin: 5px 0; border-radius: 9px; background: rgba(0,0,0,.34);
+  border: 1px solid rgba(255,255,255,.1); font-family: 'Courier New', monospace; font-size: 12.5px; white-space: pre-wrap; }
+.pt-b { font-weight: 800; } .pt-i { font-style: italic; } .pt-s { text-decoration: line-through; opacity: .75; }
+.pt-toast-copy { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(14px); z-index: 100005;
+  padding: 10px 17px; border-radius: 99px; background: rgba(20,29,39,.97); border: 1px solid rgba(255,255,255,.14);
+  color: #fff; font-size: 13px; font-weight: 700; opacity: 0; transition: .2s; pointer-events: none; }
+.pt-toast-copy.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+.pt-jump { animation: ptFlash 1.1s ease; }
+@keyframes ptFlash { 0%,100% { background: transparent; } 30% { background: rgba(250,204,21,.22); } }
+.pt-empty-hint { text-align: center; padding: 30px 18px; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+@media (max-width: 768px) { .pt-scroll-btn { bottom: 84px; right: 12px; } .pt-cm { min-width: 190px; } }
+</style>
+
+<script id="pt-v40-script">
+(() => {
+  if (window.__playTalkV40Loaded) return;
+  window.__playTalkV40Loaded = true;
+
+  const $ = id => document.getElementById(id);
+  const me = () => (typeof AppState !== 'undefined' && AppState.currentUser) || null;
+  const F = () => window.PTFiles || null;
+  const log = (...a) => console.log('%c[PlayTalk v40]', 'color:#22c55e;font-weight:700', ...a);
+  const esc = s => { const d = document.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; };
+  const cssEsc = v => (window.CSS && CSS.escape) ? CSS.escape(String(v)) : String(v).replace(/["\\]/g, '\\$&');
+  const rowById = id => document.querySelector('[data-mid="' + cssEsc(id) + '"]');
+  const chatKey = id => [me().id, id].sort().join('__');
+  const activeMsgs = () => (AppState.messages[chatKey(AppState.activeChat.id)] || []);
+
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem('pt40_' + k + '_' + (me() ? me().id : 'g')); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('pt40_' + k + '_' + (me() ? me().id : 'g'), JSON.stringify(v)); } catch (e) {} }
+  };
+
+  function flash(text) {
+    let t = $('ptCopyToast');
+    if (!t) { t = document.createElement('div'); t.id = 'ptCopyToast'; t.className = 'pt-toast-copy'; document.body.appendChild(t); }
+    t.textContent = text;
+    t.classList.add('on');
+    clearTimeout(t._h);
+    t._h = setTimeout(() => t.classList.remove('on'), 1700);
+  }
+
+  /* =========================================================
+     1. КОПИРОВАНИЕ
+     ========================================================= */
+  async function copyText(text) {
+    if (!text) return false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); flash('✅ Скопировано'); return true; }
+    } catch (e) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      flash(ok ? '✅ Скопировано' : '❌ Не удалось скопировать');
+      return ok;
+    } catch (e) { flash('❌ Не удалось скопировать'); return false; }
+  }
+  async function copyImage(url) {
+    try {
+      const blob = await (await fetch(url)).blob();
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        flash('✅ Картинка скопирована'); return;
+      }
+    } catch (e) {}
+    copyText(url);
+  }
+
+  /* текст сообщения в читабельном виде */
+  function plainText(msg) {
+    const f = F();
+    const meta = f && f.decode ? f.decode(msg.text) : null;
+    if (meta) return (meta.k === 'image' ? '📷 Фото' : meta.k === 'video' ? '🎬 Видео' : meta.k === 'audio' ? '🎵 Аудио' : '📎 ' + (meta.n || 'Файл'));
+    if (msg.type === 'voice') return '🎤 Голосовое сообщение';
+    if (msg.type === 'sticker') return '🙂 Стикер';
+    return msg.text || '';
+  }
+
+  /* =========================================================
+     2. ФОРМАТИРОВАНИЕ ТЕКСТА + ССЫЛКИ
+     ========================================================= */
+  function richText(raw) {
+    let h = esc(raw);
+    h = h.replace(/```([\s\S]+?)```/g, (m, c) => '<code class="pt-code">' + c.trim() + '</code>');
+    h = h.replace(/`([^`\n]+)`/g, '<code class="pt-code" style="display:inline;padding:2px 6px">$1</code>');
+    h = h.replace(/\*\*([^*\n]+)\*\*/g, '<span class="pt-b">$1</span>');
+    h = h.replace(/(^|[\s(])\*([^*\n]+)\*/g, '$1<span class="pt-i">$2</span>');
+    h = h.replace(/~~([^~\n]+)~~/g, '<span class="pt-s">$1</span>');
+    h = h.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="pt-link">$1</a>');
+    return h;
+  }
+
+  /* =========================================================
+     3. РЕАКЦИИ / ОТВЕТ / ИЗБРАННОЕ (локально)
+     ========================================================= */
+  const Reactions = {
+    all() { return LS.get('reactions', {}); },
+    for(id) { return this.all()[id] || {}; },
+    toggle(id, emoji) {
+      const all = this.all();
+      const m = all[id] || {};
+      const uid = me().id;
+      m[emoji] = m[emoji] || [];
+      const i = m[emoji].indexOf(uid);
+      if (i === -1) m[emoji].push(uid); else m[emoji].splice(i, 1);
+      if (!m[emoji].length) delete m[emoji];
+      if (Object.keys(m).length) all[id] = m; else delete all[id];
+      LS.set('reactions', all);
+      rerender();
+    }
+  };
+  const Pinned = {
+    all() { return LS.get('pinned', {}); },
+    get(chatId) { return this.all()[chatId] || null; },
+    set(chatId, msgId) { const a = this.all(); if (a[chatId] === msgId) delete a[chatId]; else a[chatId] = msgId; LS.set('pinned', a); rerender(); },
+  };
+  const Stars = {
+    all() { return LS.get('stars', []); },
+    has(id) { return this.all().includes(id); },
+    toggle(id) { const a = this.all(); const i = a.indexOf(id); if (i === -1) a.push(id); else a.splice(i, 1); LS.set('stars', a); rerender(); }
+  };
+  let replyTo = null;
+
+  /* =========================================================
+     4. ДЕМОНСТРАЦИЯ ЭКРАНА
+     ========================================================= */
+  const Screen = {
+    stream: null, sender: null, camTrack: null, active: false,
+
+    supported() { return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia); },
+
+    badge(on) {
+      let b = $('ptScreenBadge');
+      if (!b) {
+        b = document.createElement('div');
+        b.id = 'ptScreenBadge'; b.className = 'pt-screen-badge';
+        b.innerHTML = '<span class="dot"></span><span>Вы демонстрируете экран</span><button id="ptStopShare">Остановить</button>';
+        document.body.appendChild(b);
+        $('ptStopShare').onclick = () => this.stop();
+      }
+      b.classList.toggle('on', on);
+    },
+
+    async start() {
+      const C = window.PTV38 && PTV38.Call;
+      if (!C || C.state !== 'active') { flash('Демонстрация доступна во время звонка'); return; }
+      if (!this.supported()) { flash('Браузер не поддерживает демонстрацию экрана'); return; }
+      try {
+        this.stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: { ideal: 15, max: 30 } }, audio: false });
+      } catch (e) {
+        if (e && e.name === 'NotAllowedError') flash('Демонстрация отменена');
+        else flash('Не удалось начать демонстрацию');
+        return;
+      }
+      const track = this.stream.getVideoTracks()[0];
+      if (!track) return;
+      const pc = C.pc;
+      if (!pc) { this.cleanup(); flash('Звонок уже завершён'); return; }
+      let sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      try {
+        if (sender) { this.camTrack = sender.track; await sender.replaceTrack(track); this.sender = sender; }
+        else { this.sender = pc.addTrack(track, this.stream); await this.renegotiate(C); }
+      } catch (e) { this.cleanup(); flash('Не удалось передать экран'); return; }
+      this.active = true;
+      this.badge(true);
+      const btn = $('ptCallShare'); if (btn) { btn.classList.add('sharing'); btn.textContent = '🛑'; btn.title = 'Остановить демонстрацию'; }
+      const lv = $('ptLocalVideo'); if (lv) { lv.srcObject = this.stream; $('ptCallCard') && $('ptCallCard').classList.add('has-local-video'); }
+      track.onended = () => this.stop();
+      C.signal && C.signal({ type: 'share', to: C.peerId, callId: C.callId, on: true });
+      flash('🖥️ Демонстрация началась');
+    },
+
+    async renegotiate(C) {
+      try {
+        const offer = await C.pc.createOffer();
+        await C.pc.setLocalDescription(offer);
+        C.signal({ type: 'reoffer', to: C.peerId, callId: C.callId, sdp: offer });
+      } catch (e) {}
+    },
+
+    async stop() {
+      const C = window.PTV38 && PTV38.Call;
+      try {
+        if (this.sender && this.camTrack) await this.sender.replaceTrack(this.camTrack);
+        else if (this.sender && C && C.pc) { try { C.pc.removeTrack(this.sender); } catch (e) {} if (C.pc) await this.renegotiate(C); }
+      } catch (e) {}
+      this.cleanup();
+      if (C && C.signal && C.state === 'active') C.signal({ type: 'share', to: C.peerId, callId: C.callId, on: false });
+      const lv = $('ptLocalVideo');
+      if (lv && C && C.localStream) lv.srcObject = C.localStream;
+      flash('Демонстрация остановлена');
+    },
+
+    cleanup() {
+      if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+      this.sender = null; this.camTrack = null; this.active = false;
+      this.badge(false);
+      const btn = $('ptCallShare'); if (btn) { btn.classList.remove('sharing'); btn.textContent = '🖥️'; btn.title = 'Демонстрация экрана'; }
+    },
+
+    toggle() { this.active ? this.stop() : this.start(); }
+  };
+
+  /* кнопка в панели звонка + обработка сигналов reoffer/share */
+  function patchCall() {
+    const C = window.PTV38 && PTV38.Call;
+    if (!C || C.__v40) return;
+    C.__v40 = true;
+
+    const ctr = document.querySelector('.pt-call-controls');
+    if (ctr && !$('ptCallShare')) {
+      const b = document.createElement('button');
+      b.id = 'ptCallShare'; b.className = 'pt-cbtn hidden'; b.title = 'Демонстрация экрана'; b.textContent = '🖥️';
+      b.onclick = () => Screen.toggle();
+      const end = $('ptCallEnd');
+      ctr.insertBefore(b, end || null);
+    }
+    const origShow = C.show.bind(C);
+    C.show = function (mode, peer) {
+      origShow(mode, peer);
+      const b = $('ptCallShare');
+      if (b) b.classList.toggle('hidden', mode !== 'active' || !Screen.supported());
+    };
+    const origCleanup = C.cleanup.bind(C);
+    C.cleanup = function (msg) { Screen.cleanup(); origCleanup(msg); };
+
+    const origSignal = C.onSignal.bind(C);
+    C.onSignal = async function (p) {
+      if (p && p.v === 38 && me() && p.to === me().id) {
+        if (p.type === 'reoffer' && C.pc) {
+          try {
+            await C.pc.setRemoteDescription(new RTCSessionDescription(p.sdp));
+            const a = await C.pc.createAnswer();
+            await C.pc.setLocalDescription(a);
+            C.signal({ type: 'reanswer', to: p.from, callId: p.callId, sdp: a });
+          } catch (e) {}
+          return;
+        }
+        if (p.type === 'reanswer' && C.pc) {
+          try { await C.pc.setRemoteDescription(new RTCSessionDescription(p.sdp)); } catch (e) {}
+          return;
+        }
+        if (p.type === 'share') { C.badge(p.on ? 'Показывает экран' : 'На связи'); return; }
+      }
+      return origSignal(p);
+    };
+  }
+
+  /* =========================================================
+     5. КОНТЕКСТНОЕ МЕНЮ СООБЩЕНИЯ
+     ========================================================= */
+  function closeMenus() {
+    const m = $('ptCtxMenu'); if (m) m.classList.add('hidden');
+    const r = $('ptReactBar'); if (r) r.classList.add('hidden');
+  }
+
+  function reactBar(msg, x, y) {
+    let bar = $('ptReactBar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'ptReactBar'; bar.className = 'pt-react-bar hidden';
+      ['👍','❤️','😂','😮','😢','🔥','👏'].forEach(e => {
+        const s = document.createElement('span');
+        s.textContent = e;
+        s.onclick = () => { Reactions.toggle(bar._id, e); closeMenus(); };
+        bar.appendChild(s);
+      });
+      document.body.appendChild(bar);
+    }
+    bar._id = msg.id;
+    bar.classList.remove('hidden');
+    const r = bar.getBoundingClientRect();
+    bar.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+    bar.style.top = Math.max(8, y - r.height - 46) + 'px';
+  }
+
+  function ctxMenu(msg, x, y) {
+    let m = $('ptCtxMenu');
+    if (!m) { m = document.createElement('div'); m.id = 'ptCtxMenu'; m.className = 'pt-cm hidden'; document.body.appendChild(m); }
+    const f = F();
+    const meta = f && f.decode ? f.decode(msg.text) : null;
+    const isOut = msg.senderId === me().id;
+    const sel = String(window.getSelection() || '');
+    const items = [];
+
+    if (sel.trim()) items.push(['📋', 'Копировать выделенное', () => copyText(sel)]);
+    if (!meta && msg.text) items.push(['📄', 'Копировать текст', () => copyText(msg.text)]);
+    if (meta && (meta.u || meta.d)) {
+      if (meta.k === 'image') items.push(['🖼️', 'Копировать картинку', () => copyImage(meta.u || meta.d)]);
+      items.push(['🔗', 'Копировать ссылку', () => copyText(meta.u || '(файл встроен в сообщение)')]);
+      items.push(['⬇️', 'Скачать', () => { const a = document.createElement('a'); a.href = meta.u || meta.d; a.download = meta.n || 'file'; a.click(); }]);
+    }
+    items.push(['↩️', 'Ответить', () => setReply(msg)]);
+    items.push(['📤', 'Переслать', () => forward(msg)]);
+    items.push([Stars.has(msg.id) ? '⭐' : '☆', Stars.has(msg.id) ? 'Убрать из избранного' : 'В избранное', () => Stars.toggle(msg.id)]);
+    items.push(['📌', Pinned.get(AppState.activeChat.id) === msg.id ? 'Открепить' : 'Закрепить', () => Pinned.set(AppState.activeChat.id, msg.id)]);
+    items.push(['😊', 'Реакция', () => reactBar(msg, x, y)]);
+    if (isOut && !meta && msg.type !== 'voice' && msg.type !== 'sticker') items.push(['✏️', 'Изменить', () => editMsg(msg)]);
+    items.push([null]);
+    items.push(['🗑️', isOut ? 'Удалить у всех' : 'Удалить у себя', () => delMsg(msg), true]);
+
+    m.innerHTML = '';
+    items.forEach(it => {
+      if (!it[0]) { const d = document.createElement('div'); d.className = 'sep'; m.appendChild(d); return; }
+      const b = document.createElement('button');
+      if (it[3]) b.className = 'danger';
+      b.innerHTML = '<span class="ic">' + it[0] + '</span><span></span>';
+      b.lastChild.textContent = it[1];
+      b.onclick = () => { closeMenus(); it[2](); };
+      m.appendChild(b);
+    });
+    m.classList.remove('hidden');
+    const r = m.getBoundingClientRect();
+    m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+    m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+  }
+
+  /* ---- действия ---- */
+  function setReply(msg) {
+    replyTo = msg;
+    const bar = $('ptReplyBar');
+    if (bar) {
+      bar.classList.add('on');
+      bar.querySelector('.pt-quote-name').textContent = msg.senderId === me().id ? 'Вы' : (AppState.activeChat.name || 'Собеседник');
+      bar.querySelector('.pt-quote-text').textContent = plainText(msg).slice(0, 120);
+    }
+    const i = $('msgTextInput'); if (i) i.focus();
+  }
+  function clearReply() { replyTo = null; const b = $('ptReplyBar'); if (b) b.classList.remove('on'); }
+
+  async function forward(msg) {
+    const users = (AppState.users || []).filter(u => u.id !== me().id);
+    if (!users.length) { flash('Некому переслать'); return; }
+    const names = users.map((u, i) => (i + 1) + '. ' + (u.name || u.username)).join('\n');
+    const pick = prompt('Кому переслать? Введи номер:\n' + names);
+    const idx = parseInt(pick, 10) - 1;
+    if (isNaN(idx) || !users[idx]) return;
+    const target = users[idx];
+    try {
+      const c = (window.PTV38 && PTV38.getClient()) || null;
+      if (!c) return;
+      const body = '__fwd__:' + JSON.stringify({ from: msg.senderId === me().id ? me().name : (AppState.activeChat.name || '') }) + '\n' + msg.text;
+      await c.from('messages').insert({ sender_id: me().id, recipient_id: target.id, body });
+      flash('📤 Переслано: ' + (target.name || ''));
+    } catch (e) { flash('Не удалось переслать'); }
+  }
+
+  async function editMsg(msg) {
+    const t = prompt('Изменить сообщение:', msg.text);
+    if (t === null || t.trim() === '' || t === msg.text) return;
+    try {
+      const c = (window.PTV38 && PTV38.getClient()) || null;
+      if (!c) return;
+      const { error } = await c.from('messages').update({ body: t.trim() + ' \u200b(изм.)' }).eq('id', msg.id);
+      if (error) { flash('Изменение недоступно: ' + error.message); return; }
+      msg.text = t.trim() + ' \u200b(изм.)';
+      rerender(); flash('✏️ Изменено');
+    } catch (e) { flash('Не удалось изменить'); }
+  }
+
+  async function delMsg(msg) {
+    if (!confirm('Удалить это сообщение?')) return;
+    const key = chatKey(AppState.activeChat.id);
+    const arr = AppState.messages[key] || [];
+    const i = arr.findIndex(m => m.id === msg.id);
+    if (i !== -1) arr.splice(i, 1);
+    rerender();
+    try {
+      const c = (window.PTV38 && PTV38.getClient()) || null;
+      if (c && msg.senderId === me().id && !String(msg.id).startsWith('tmp')) await c.from('messages').delete().eq('id', msg.id);
+    } catch (e) {}
+    flash('🗑️ Удалено');
+  }
+
+  /* =========================================================
+     6. ПОИСК ПО ПЕРЕПИСКЕ
+     ========================================================= */
+  const Search = { q: '', hits: [], i: 0,
+    panel() {
+      let p = $('ptSearchPanel');
+      if (p) return p;
+      const box = $('activeChatBox'); if (!box) return null;
+      p = document.createElement('div');
+      p.id = 'ptSearchPanel'; p.className = 'pt-search-panel';
+      p.innerHTML = '<input type="text" id="ptSearchInput" placeholder="Поиск в переписке..."><span class="cnt" id="ptSearchCnt"></span><button id="ptSearchPrev">↑</button><button id="ptSearchNext">↓</button><button id="ptSearchClose">✕</button>';
+      const hdr = box.querySelector('.chat-header-bar');
+      hdr ? hdr.insertAdjacentElement('afterend', p) : box.insertBefore(p, box.firstChild);
+      $('ptSearchInput').addEventListener('input', e => this.run(e.target.value));
+      $('ptSearchInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); this.step(e.shiftKey ? -1 : 1); } if (e.key === 'Escape') this.close(); });
+      $('ptSearchPrev').onclick = () => this.step(-1);
+      $('ptSearchNext').onclick = () => this.step(1);
+      $('ptSearchClose').onclick = () => this.close();
+      return p;
+    },
+    open() { const p = this.panel(); if (!p) return; p.classList.add('on'); const i = $('ptSearchInput'); i.value = this.q; i.focus(); },
+    close() { const p = $('ptSearchPanel'); if (p) p.classList.remove('on'); this.q = ''; this.hits = []; rerender(); },
+    run(q) {
+      this.q = q; this.i = 0;
+      const ql = q.toLowerCase().trim();
+      this.hits = !ql ? [] : activeMsgs().filter(m => plainText(m).toLowerCase().includes(ql)).map(m => m.id);
+      const c = $('ptSearchCnt'); if (c) c.textContent = ql ? (this.hits.length ? '1/' + this.hits.length : 'нет') : '';
+      rerender(); this.scrollTo();
+    },
+    step(d) {
+      if (!this.hits.length) return;
+      this.i = (this.i + d + this.hits.length) % this.hits.length;
+      const c = $('ptSearchCnt'); if (c) c.textContent = (this.i + 1) + '/' + this.hits.length;
+      this.scrollTo();
+    },
+    scrollTo() {
+      const id = this.hits[this.i]; if (!id) return;
+      const el = rowById(id);
+      if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('pt-found'); setTimeout(() => el.classList.remove('pt-found'), 1600); }
+    }
+  };
+
+  /* =========================================================
+     7. ОТРИСОВКА (расширяет v39)
+     ========================================================= */
+  function decorate() {
+    if (typeof AppState === 'undefined' || !AppState.activeChat || !me()) return;
+    const vp = $('messagesViewport'); if (!vp) return;
+    const list = activeMsgs();
+    const byId = {}; list.forEach(m => { byId[m.id] = m; });
+    const pinnedId = Pinned.get(AppState.activeChat.id);
+    const ql = (Search.q || '').toLowerCase().trim();
+
+    [...vp.querySelectorAll('.msg-row-container')].forEach(row => {
+      const id = row.dataset.mid; if (!id) return;
+      const msg = byId[id]; if (!msg) return;
+      const bub = row.querySelector('.msg-bubble-card'); if (!bub) return;
+      const f = F();
+      const meta = f && f.decode ? f.decode(msg.text) : null;
+
+      /* форматирование + ссылки + подсветка поиска (только для обычного текста) */
+      if (!meta && msg.type !== 'voice' && msg.type !== 'sticker') {
+        const holder = bub.firstElementChild;
+        if (holder && !holder.classList.contains('pt-att') && !holder.classList.contains('wallpaper-offer-card') && !holder.dataset.v40) {
+          let raw = msg.text || '';
+          let fwd = '';
+          if (raw.startsWith('__fwd__:')) {
+            const nl = raw.indexOf('\n');
+            try { fwd = (JSON.parse(raw.slice(8, nl)) || {}).from || ''; } catch (e) {}
+            raw = raw.slice(nl + 1);
+          }
+          let html = richText(raw);
+          if (ql) {
+            const re = new RegExp('(' + ql.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+            html = html.replace(/(>[^<]+)/g, s => s.replace(re, '<mark class="pt-hl">$1</mark>'));
+          }
+          holder.innerHTML = (fwd ? '<div class="pt-fwd">📤 Переслано от ' + esc(fwd) + '</div>' : '') + html;
+          holder.dataset.v40 = '1';
+        }
+      }
+
+      /* цитата ответа */
+      if (msg.replyToText && !bub.querySelector('.pt-quote')) {
+        const q = document.createElement('div');
+        q.className = 'pt-quote';
+        q.innerHTML = '<div class="pt-quote-name">' + esc(msg.replyToName || 'Ответ') + '</div><div class="pt-quote-text">' + esc(msg.replyToText) + '</div>';
+        bub.insertBefore(q, bub.firstChild);
+      }
+
+      /* звёздочка и булавка */
+      if (Stars.has(id) && !bub.querySelector('.pt-star')) {
+        const s = document.createElement('span'); s.className = 'pt-star pt-edited'; s.textContent = '⭐';
+        const meta2 = bub.querySelector('.msg-meta-details'); if (meta2) meta2.insertBefore(s, meta2.firstChild);
+      }
+      if (pinnedId === id && !bub.querySelector('.pt-pin')) {
+        const s = document.createElement('span'); s.className = 'pt-pin pt-edited'; s.textContent = '📌';
+        const meta2 = bub.querySelector('.msg-meta-details'); if (meta2) meta2.insertBefore(s, meta2.firstChild);
+      }
+
+      /* реакции */
+      const rx = Reactions.for(id);
+      const keys = Object.keys(rx);
+      const old = bub.querySelector('.pt-reactions'); if (old) old.remove();
+      if (keys.length) {
+        const wrap = document.createElement('div'); wrap.className = 'pt-reactions';
+        keys.forEach(e => {
+          const b = document.createElement('span');
+          b.className = 'pt-reaction' + (rx[e].includes(me().id) ? ' mine' : '');
+          b.textContent = e + ' ' + rx[e].length;
+          b.onclick = ev => { ev.stopPropagation(); Reactions.toggle(id, e); };
+          wrap.appendChild(b);
+        });
+        const meta2 = bub.querySelector('.msg-meta-details');
+        meta2 ? bub.insertBefore(wrap, meta2) : bub.appendChild(wrap);
+      }
+
+      /* меню по правому клику и долгому тапу */
+      if (!row.dataset.v40ctx) {
+        row.dataset.v40ctx = '1';
+        row.addEventListener('contextmenu', e => { e.preventDefault(); ctxMenu(msg, e.clientX, e.clientY); });
+        let tm = null;
+        row.addEventListener('touchstart', e => { const t = e.touches[0]; tm = setTimeout(() => ctxMenu(msg, t.clientX, t.clientY), 480); }, { passive: true });
+        ['touchend','touchmove','touchcancel'].forEach(ev => row.addEventListener(ev, () => clearTimeout(tm), { passive: true }));
+        row.addEventListener('dblclick', () => Reactions.toggle(msg.id, '❤️'));
+      }
+    });
+
+    renderPinnedBar(pinnedId, byId);
+    scrollBtn();
+  }
+
+  function renderPinnedBar(pinnedId, byId) {
+    const box = $('activeChatBox'); if (!box) return;
+    let bar = $('ptPinnedBar');
+    if (!pinnedId || !byId[pinnedId]) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'ptPinnedBar'; bar.className = 'pt-reply-bar on'; bar.style.margin = '8px 12px';
+      const hdr = box.querySelector('.chat-header-bar');
+      const sp = $('ptSearchPanel');
+      (sp || hdr) ? (sp || hdr).insertAdjacentElement('afterend', bar) : box.insertBefore(bar, box.firstChild);
+    }
+    bar.innerHTML = '<span>📌</span><div class="body"><div class="pt-quote-name">Закреплённое</div><div class="pt-quote-text"></div></div><span class="x">✕</span>';
+    bar.querySelector('.pt-quote-text').textContent = plainText(byId[pinnedId]).slice(0, 140);
+    bar.querySelector('.x').onclick = () => Pinned.set(AppState.activeChat.id, pinnedId);
+    bar.onclick = e => {
+      if (e.target.classList.contains('x')) return;
+      const el = rowById(pinnedId);
+      if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('pt-jump'); setTimeout(() => el.classList.remove('pt-jump'), 1200); }
+    };
+  }
+
+  function scrollBtn() {
+    const vp = $('messagesViewport'); if (!vp) return;
+    let b = $('ptScrollDown');
+    if (!b) {
+      b = document.createElement('button');
+      b.id = 'ptScrollDown'; b.className = 'pt-scroll-btn'; b.innerHTML = '↓';
+      b.onclick = () => { vp.scrollTo({ top: vp.scrollHeight, behavior: 'smooth' }); };
+      (vp.parentElement || document.body).appendChild(b);
+      vp.addEventListener('scroll', () => {
+        const far = vp.scrollHeight - vp.scrollTop - vp.clientHeight > 260;
+        b.classList.toggle('on', far);
+      });
+    }
+  }
+
+  function rerender() {
+    try { MessagingEngine.renderMessages(); } catch (e) {}
+    setTimeout(decorate, 0);
+  }
+
+  /* оборачиваем рендер v39, чтобы декор применялся всегда */
+  function hookRender() {
+    const f = F();
+    if (!f || f.__v40hooked) return;
+    f.__v40hooked = true;
+    const orig = f.renderMessages;
+    f.renderMessages = function () { orig.apply(this, arguments); try { decorate(); } catch (e) {} };
+  }
+
+  /* ответ: добавляем цитату к отправляемому тексту */
+  function hookSend() {
+    const S = window.PTV38 && PTV38.Send;
+    if (!S || S.__v40) return;
+    S.__v40 = true;
+    const orig = S.run.bind(S);
+    S.run = async function () {
+      const r = replyTo;
+      const p = orig();
+      if (r) {
+        clearReply();
+        setTimeout(() => {
+          const arr = activeMsgs();
+          const last = arr[arr.length - 1];
+          if (last && last.senderId === me().id) {
+            last.replyToName = r.senderId === me().id ? 'Вы' : (AppState.activeChat.name || '');
+            last.replyToText = plainText(r).slice(0, 140);
+            rerender();
+          }
+        }, 60);
+      }
+      return p;
+    };
+  }
+
+  function replyBar() {
+    if ($('ptReplyBar')) return;
+    const bar = document.querySelector('.chat-input-bar-container');
+    if (!bar || !bar.parentNode) return;
+    const el = document.createElement('div');
+    el.id = 'ptReplyBar'; el.className = 'pt-reply-bar';
+    el.innerHTML = '<span>↩️</span><div class="body"><div class="pt-quote-name"></div><div class="pt-quote-text"></div></div><span class="x">✕</span>';
+    el.querySelector('.x').onclick = clearReply;
+    bar.parentNode.insertBefore(el, bar);
+  }
+
+  /* =========================================================
+     8. КНОПКА ПОИСКА + ГОРЯЧИЕ КЛАВИШИ
+     ========================================================= */
+  function headerBtn() {
+    const acts = document.querySelector('.chat-header-actions');
+    if (!acts || $('ptSearchBtn')) return;
+    const b = document.createElement('button');
+    b.id = 'ptSearchBtn'; b.className = 'header-icon-btn'; b.title = 'Поиск в переписке (Ctrl+F)'; b.textContent = '🔍';
+    b.onclick = () => Search.open();
+    acts.insertBefore(b, acts.children[2] || null);
+  }
+
+  function keys() {
+    if (window.__v40keys) return;
+    window.__v40keys = true;
+    document.addEventListener('keydown', e => {
+      const inField = /INPUT|TEXTAREA/.test((e.target.tagName || ''));
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && AppState.activeChat) { e.preventDefault(); Search.open(); return; }
+      if (e.key === 'Escape') { closeMenus(); clearReply(); return; }
+      if (!inField && e.key === '/' && AppState.activeChat) { e.preventDefault(); const i = $('msgTextInput'); if (i) i.focus(); }
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#ptCtxMenu') && !e.target.closest('#ptReactBar')) closeMenus();
+    });
+  }
+
+  /* копирование профиля по клику */
+  function profileCopy() {
+    ['profileTag','profilePhone','profileBio'].forEach(id => {
+      const el = $(id);
+      if (!el || el.dataset.v40 === '1') return;
+      el.dataset.v40 = '1';
+      el.style.cursor = 'copy';
+      el.title = 'Нажми, чтобы скопировать';
+      el.onclick = () => { const t = (el.textContent || '').split('\n')[0].trim(); if (t && t !== '—') copyText(t); };
+    });
+  }
+
+  const V40 = {
+    Screen, Search, copyText, decorate, rerender,
+    init() {
+      hookRender(); hookSend(); patchCall(); headerBtn(); replyBar(); keys(); profileCopy();
+      decorate();
+      setInterval(() => { hookRender(); hookSend(); patchCall(); headerBtn(); replyBar(); profileCopy(); }, 2500);
+      log('готово: демонстрация экрана, копирование, реакции, ответы, поиск и др.');
+    }
+  };
+  window.PT40 = V40;
+
+  const boot = () => {
+    if (typeof AppState === 'undefined' || typeof MessagingEngine === 'undefined' || !AppState.currentUser) { setTimeout(boot, 400); return; }
+    V40.init();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 2600));
+  else setTimeout(boot, 2600);
+})();
+</script>
+
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a22505712ea5776c',t:'MTc4NTI1MzYzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
