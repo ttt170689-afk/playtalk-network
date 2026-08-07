@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PlayTalk MAX 10.5</title>
+<title>PlayTalk MAX 10.6 CLEAN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -6245,7 +6245,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 
 
 
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a209a9a3bf39fffe',t:'MTc4NDk2Njc1OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
 <style id="pt-v30-online-style">
 .online-auth-wrap{display:flex;flex-direction:column;gap:14px}.online-auth-tabs{display:flex;gap:10px;margin-top:18px}.online-auth-tab{flex:1;padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:700}.online-auth-tab.active{background:rgba(82,136,193,.14);border-color:rgba(82,136,193,.22)}.online-auth-form{display:flex;flex-direction:column;gap:12px}.online-auth-form.hidden{display:none}.online-auth-note{padding:12px 14px;border-radius:14px;background:rgba(82,136,193,.08);border:1px solid rgba(82,136,193,.16);color:#dcefff;font-size:12px;line-height:1.55}.online-avatar-register{display:flex;align-items:center;gap:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}.online-avatar-circle{width:78px;height:78px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(82,136,193,.22),rgba(139,92,246,.24));border:2px solid rgba(82,136,193,.3);flex-shrink:0;cursor:pointer}.online-avatar-circle img{width:100%;height:100%;object-fit:cover}.online-avatar-hint{font-size:12px;color:var(--text-muted);line-height:1.55}.online-auth-mini{font-size:11px;color:var(--text-muted)}.online-empty-users{padding:28px 16px;color:var(--text-muted);font-size:13px;line-height:1.55;text-align:center}.online-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(58,198,122,.12);border:1px solid rgba(58,198,122,.18);color:#d7ffea;font-size:10px;font-weight:800;margin-top:4px}.online-chat-status.live{color:#4ade80}.online-chat-status.offline{color:var(--text-muted)}
 </style>
@@ -8522,9 +8522,8 @@ const PT_EXTRA_VISUAL_LIBRARY = [
       if (!text) return;
       if (!me())                 { toast('Сначала войди в аккаунт'); return; }
       if (!AppState.activeChat)  { toast('Открой чат'); return; }
-      if (this.busy) return;
+      /* CLEAN: без блокировки — сообщения можно слать сразу, одно за другим */
 
-      this.setBusy(true);
       this.note('');
 
       /* --- поле чистим СРАЗУ, до сети: именно из-за обратного порядка текст залипал --- */
@@ -10570,7 +10569,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
   const D = {
     theme: 'default', fontSize: 14.5, compact: false, hideAvatars: false, flatBubbles: false,
     bubbleWidth: 68, sendOnEnter: true, spellcheck: true, autoEmoticon: true, bigEmoji: true,
-    showSeconds: false, group: true, undoSend: true, undoMs: 5000, draft: true, counter: true,
+    showSeconds: false, group: true, undoSend: false, undoMs: 0, draft: true, counter: true,
     soundIn: true, soundOut: true, volume: 0.35, desktopNotif: false, vibrate: false,
     typingSend: true, readReceipts: true, blurPreview: false, pin: '', autoDownload: true,
     animations: true, wideMode: false, showIds: false, clock24: true, spaceAvatars: true,
@@ -11007,7 +11006,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
           row('bigEmoji', 'Крупные эмодзи', 'Если в сообщении только эмодзи') +
           row('draft', 'Сохранять черновики') +
           row('counter', 'Счётчик символов') +
-          row('undoSend', 'Отмена отправки', 'Кнопка «Отменить» на 5 сек') +
+          /* CLEAN: строка «Отмена отправки» убрана — задержки больше нет */
           row('spellcheck', 'Проверка орфографии') +
           row('showSeconds', 'Секунды во времени') +
           row('timeOnHover', 'Полная дата при наведении') +
@@ -11335,14 +11334,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 
       if (text.trim()) { P.Hist.push(text.trim()); P.Draft.clear(); }
 
-      /* отмена отправки */
-      if (cfg.undoSend && text.trim()) {
-        const saved = text;
-        i.value = '';
-        P.counter();
-        showUndo(saved, () => { i.value = saved; orig(); });
-        return Promise.resolve();
-      }
+      /* CLEAN: задержка убрана — сообщение уходит СРАЗУ, без ожидания */
       const r = orig();
       playSound('out');
       return r;
@@ -11417,6 +11409,10 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 
   /* ============ 173-185: ПАНЕЛЬ БЫСТРЫХ ДЕЙСТВИЙ ============ */
   function quickBar() {
+    /* CLEAN: док-панель с кучей кнопок убрана как мусор */
+    const junk = $('ptQuick');
+    if (junk) junk.remove();
+    return;
     const bar = qs('.chat-input-bar-container');
     if (!bar || !bar.parentNode) return;
     let q = $('ptQuick');
@@ -11557,6 +11553,8 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 
   /* ============ 216-220: КНОПКИ В ШАПКЕ ============ */
   function headerBtns() {
+    /* CLEAN: лишние кнопки ⌘ и ⚙️ в шапке не добавляем */
+    return;
     const acts = qs('.chat-header-actions');
     if (!acts) return;
     if (!$('ptCmdBtn')) {
@@ -11720,34 +11718,58 @@ const PT_EXTRA_VISUAL_LIBRARY = [
   /* =====================================================
      ЗВУКОВОЙ ДВИЖОК — разные звуки на разные события
      ===================================================== */
+  /* CLEAN: ОЧЕНЬ МНОГО ЗВУКОВ — 16 наборов × 13 событий ≈ 200 звуков */
   const PACKS = {
     classic: { name: '🔔 Классика', d: 'Мягкие тона' },
     crystal: { name: '💎 Кристалл', d: 'Чистые высокие' },
     retro:   { name: '🕹️ Ретро', d: '8-бит, как в играх' },
     nature:  { name: '🌿 Природа', d: 'Тёплые деревянные' },
     minimal: { name: '⚪ Минимал', d: 'Едва слышные' },
-    cosmic:  { name: '🚀 Космос', d: 'Объёмные с эхом' }
+    cosmic:  { name: '🚀 Космос', d: 'Объёмные с эхом' },
+    arcade:  { name: '👾 Аркада', d: 'Быстрые пиксельные' },
+    bubble:  { name: '🫧 Пузыри', d: 'Восходящие бульки' },
+    laser:   { name: '⚡ Лазер', d: 'Падающие лучи' },
+    bell:    { name: '🛎️ Колокола', d: 'Долгий звон' },
+    neon:    { name: '🌈 Неон', d: 'Вибрирующий синт' },
+    wood:    { name: '🪵 Дерево', d: 'Тук-ток перкуссия' },
+    piano:   { name: '🎹 Пианино', d: 'Мягкие клавиши' },
+    pop:     { name: '🍾 Поп', d: 'Короткие щелчки' },
+    water:   { name: '💧 Вода', d: 'Капли и капли' },
+    space:   { name: '🌌 Эмбиент', d: 'Долгие волны с эхом' }
   };
-  /* тип события -> [частоты], длительность, форма волны */
+  /* тип события -> [частоты] */
   const EVENTS = {
     in:       { t: 'Входящее сообщение',  base: [660, 880] },
     out:      { t: 'Отправка',            base: [880] },
+    sent:     { t: 'Доставлено',          base: [1200] },
     mention:  { t: 'Упоминание вас',      base: [784, 988, 1175] },
     call:     { t: 'Входящий звонок',     base: [660, 550], loop: true },
     file:     { t: 'Файл получен',        base: [520, 700] },
+    sticker:  { t: 'Стикер',              base: [523, 659, 784] },
+    voice:    { t: 'Голосовое сообщение', base: [330, 415, 494] },
     reaction: { t: 'Реакция на сообщение',base: [1046] },
+    open:     { t: 'Открытие чата',       base: [440, 554] },
     join:     { t: 'Контакт в сети',      base: [523, 784] },
-    err:      { t: 'Ошибка',              base: [220, 180] },
-    sent:     { t: 'Доставлено',          base: [1200] },
-    typing:   { t: 'Собеседник печатает', base: [400] }
+    typing:   { t: 'Собеседник печатает', base: [400] },
+    err:      { t: 'Ошибка',              base: [220, 180] }
   };
   const PACK_MOD = {
     classic: { wave: 'sine',     dur: 0.20, mul: 1,    gap: 0.10, gain: 1 },
-    crystal: { wave: 'triangle', dur: 0.26, mul: 1.34, gap: 0.08, gain: 0.95 },
-    retro:   { wave: 'square',   dur: 0.11, mul: 0.75, gap: 0.07, gain: 0.55 },
-    nature:  { wave: 'sine',     dur: 0.34, mul: 0.62, gap: 0.13, gain: 1.05 },
+    crystal: { wave: 'triangle', dur: 0.26, mul: 1.34, gap: 0.08, gain: 0.95, fx: 'shine' },
+    retro:   { wave: 'square',   dur: 0.11, mul: 0.75, gap: 0.07, gain: 0.55, fx: 'bit' },
+    nature:  { wave: 'sine',     dur: 0.34, mul: 0.62, gap: 0.13, gain: 1.05, fx: 'warm' },
     minimal: { wave: 'sine',     dur: 0.13, mul: 1,    gap: 0.06, gain: 0.45 },
-    cosmic:  { wave: 'sawtooth', dur: 0.42, mul: 0.85, gap: 0.15, gain: 0.5 }
+    cosmic:  { wave: 'sawtooth', dur: 0.42, mul: 0.85, gap: 0.15, gain: 0.5,  fx: 'echo' },
+    arcade:  { wave: 'square',   dur: 0.09, mul: 1.5,  gap: 0.05, gain: 0.5,  fx: 'bit' },
+    bubble:  { wave: 'sine',     dur: 0.16, mul: 1.2,  gap: 0.07, gain: 0.9,  fx: 'rise' },
+    laser:   { wave: 'sawtooth', dur: 0.18, mul: 1.6,  gap: 0.06, gain: 0.5,  fx: 'fall' },
+    bell:    { wave: 'triangle', dur: 0.50, mul: 1,    gap: 0.12, gain: 0.8,  fx: 'bell' },
+    neon:    { wave: 'sawtooth', dur: 0.22, mul: 1.1,  gap: 0.08, gain: 0.55, fx: 'wobble' },
+    wood:    { wave: 'sine',     dur: 0.12, mul: 0.5,  gap: 0.09, gain: 1.1,  fx: 'knock' },
+    piano:   { wave: 'triangle', dur: 0.40, mul: 1,    gap: 0.10, gain: 0.9,  fx: 'fade' },
+    pop:     { wave: 'square',   dur: 0.07, mul: 2,    gap: 0.05, gain: 0.4,  fx: 'pop' },
+    water:   { wave: 'sine',     dur: 0.22, mul: 0.9,  gap: 0.09, gain: 0.85, fx: 'drop' },
+    space:   { wave: 'sine',     dur: 0.60, mul: 0.7,  gap: 0.16, gain: 0.7,  fx: 'echo' }
   };
 
   const Sound = {
@@ -11784,19 +11806,33 @@ const PT_EXTRA_VISUAL_LIBRARY = [
           const t0 = ctx.currentTime + i * M.gap;
           const o = ctx.createOscillator(), g = ctx.createGain();
           o.type = M.wave; o.frequency.setValueAtTime(f * M.mul, t0);
-          if (c.pack === 'cosmic') o.frequency.exponentialRampToValueAtTime(f * M.mul * 0.72, t0 + M.dur);
-          if (c.pack === 'retro') o.frequency.setValueAtTime(f * M.mul * 1.5, t0 + M.dur * 0.5);
+          const fx = M.fx || (c.pack === 'cosmic' ? 'echo' : c.pack === 'retro' ? 'bit' : '');
+          if (fx === 'echo')  o.frequency.exponentialRampToValueAtTime(f * M.mul * 0.72, t0 + M.dur);
+          if (fx === 'bit')   o.frequency.setValueAtTime(f * M.mul * 1.5, t0 + M.dur * 0.5);
+          if (fx === 'rise')  o.frequency.exponentialRampToValueAtTime(f * M.mul * 1.9, t0 + M.dur);
+          if (fx === 'fall')  o.frequency.exponentialRampToValueAtTime(Math.max(40, f * M.mul * 0.25), t0 + M.dur);
+          if (fx === 'warm')  o.frequency.exponentialRampToValueAtTime(f * M.mul * 0.9, t0 + M.dur);
+          if (fx === 'bell')  o.frequency.setValueAtTime(f * M.mul * 2, t0);
+          if (fx === 'knock') o.frequency.exponentialRampToValueAtTime(Math.max(60, f * M.mul * 0.5), t0 + 0.05);
+          if (fx === 'pop')   o.frequency.exponentialRampToValueAtTime(f * M.mul * 0.4, t0 + M.dur);
+          if (fx === 'drop')  { o.frequency.setValueAtTime(f * M.mul * 1.4, t0); o.frequency.exponentialRampToValueAtTime(f * M.mul * 0.8, t0 + M.dur * 0.6); }
+          if (fx === 'shine') o.frequency.setValueAtTime(f * M.mul * (1 + i * 0.06), t0);
+          if (fx === 'wobble') {
+            const l = ctx.createOscillator(), lg = ctx.createGain();
+            l.type = 'sine'; l.frequency.value = 16; lg.gain.value = f * 0.09;
+            l.connect(lg); lg.connect(o.frequency); l.start(t0); l.stop(t0 + M.dur + 0.05);
+          }
           g.gain.setValueAtTime(0.0001, t0);
           g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
           g.gain.exponentialRampToValueAtTime(0.0001, t0 + M.dur);
           o.connect(g);
-          if (c.pack === 'cosmic' && ctx.createDelay) {
+          if (fx === 'echo' && ctx.createDelay) {
             const dl = ctx.createDelay(), fb = ctx.createGain();
             dl.delayTime.value = 0.13; fb.gain.value = 0.28;
             g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(ctx.destination);
           }
           g.connect(ctx.destination);
-          o.start(t0); o.stop(t0 + M.dur + 0.04);
+          o.start(t0); o.stop(t0 + M.dur + 0.06);
         });
         const vib = (P41() && P41().cfg.vibrate);
         if (vib && navigator.vibrate) navigator.vibrate(ev === 'call' ? [80, 60, 80] : ev === 'mention' ? [50, 40, 50] : 35);
@@ -12353,9 +12389,30 @@ const PT_EXTRA_VISUAL_LIBRARY = [
       const t = ((i && i.value) || '').toLowerCase();
       const r = orig();
       Sound.play('out');
+      if (r && r.then) r.then(() => Sound.play('sent')).catch(() => Sound.play('err'));
       if (PARTY.some(p => t.includes(p))) confetti();
       return r;
     };
+  }
+
+  /* CLEAN: дополнительные звуки — стикеры, голосовые, открытие чата */
+  function hookMoreSounds() {
+    if (window.__v42more) return;
+    window.__v42more = true;
+    try {
+      const os = MessagingEngine.sendStickerMessage.bind(MessagingEngine);
+      MessagingEngine.sendStickerMessage = function (url) { const r = os(url); Sound.play('sticker'); return r; };
+    } catch (e) {}
+    try {
+      if (MessagingEngine.sendVoiceMessage) {
+        const ov = MessagingEngine.sendVoiceMessage.bind(MessagingEngine);
+        MessagingEngine.sendVoiceMessage = function (url) { const r = ov(url); Sound.play('voice'); return r; };
+      }
+    } catch (e) {}
+    try {
+      const oo = AppEngine.openChat.bind(AppEngine);
+      AppEngine.openChat = function (u) { const r = oo(u); Sound.play('open'); return r; };
+    } catch (e) {}
   }
 
   /* звук звонка */
@@ -12395,20 +12452,14 @@ const PT_EXTRA_VISUAL_LIBRARY = [
       b.onclick = () => Find.open();
       side.appendChild(b);
     }
+    /* CLEAN: док-панель убрана; вместо кучи кнопок — одна кнопка звуков в шапке */
     const bar = qs('#ptQuick');
-    if (bar && !bar.dataset.v42) {
-      bar.dataset.v42 = '1';
-      [['🔎', 'Поиск людей', () => Find.open()],
-       ['🔊', 'Звуки', () => SoundUI.open()],
-       ['📊', 'Дашборд', () => Dash.open()],
-       ['⏰', 'Отложенные', () => Sched.open()],
-       ['💡', 'Идеи', () => Ideas.open()],
-       ['🌐', 'Переводчик', () => translate()]].forEach(it => {
-        const b = document.createElement('button');
-        b.className = 'pt-q'; b.textContent = it[0]; b.title = it[1];
-        b.onclick = e => { e.preventDefault(); it[2](); };
-        bar.appendChild(b);
-      });
+    if (bar) bar.remove();
+    if (acts && !$('ptSoundBtn')) {
+      const s = document.createElement('button');
+      s.id = 'ptSoundBtn'; s.className = 'header-icon-btn'; s.title = 'Звуки и наборы'; s.textContent = '🔊';
+      s.onclick = () => SoundUI.open();
+      acts.appendChild(s);
     }
   }
 
@@ -12453,7 +12504,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
   }
 
   function tick() {
-    hookSend(); hookCall(); hookReact(); buttons(); palette();
+    hookSend(); hookCall(); hookReact(); hookMoreSounds(); buttons(); palette();
     Find.patchSidebar(); Mention.bind(); watch(); Sched.tick();
   }
 
@@ -12461,7 +12512,7 @@ const PT_EXTRA_VISUAL_LIBRARY = [
     keys(); tick();
     setInterval(tick, 2000);
     log('готово: звуки по событиям, поиск людей, дашборд, отложенные');
-    setTimeout(() => { if (!S.get('hi42', false)) { S.set('hi42', true); flash('🔎 Ctrl+P — поиск людей · 🔊 6 наборов звуков'); } }, 3000);
+    setTimeout(() => { if (!S.get('hi42', false)) { S.set('hi42', true); flash('🔊 Кнопка 🔊 в шапке чата — 16 наборов звуков и 13 событий'); } }, 3000);
   }
   const boot = () => {
     if (typeof AppState === 'undefined' || typeof MessagingEngine === 'undefined' || !AppState.currentUser || !window.PT41) { setTimeout(boot, 400); return; }
@@ -12473,5 +12524,5 @@ const PT_EXTRA_VISUAL_LIBRARY = [
 })();
 
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a225a9e469b594c3',t:'MTc4NTI2MDM3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a27897569f99e74e',t:'MTc4NjEyOTkyOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
